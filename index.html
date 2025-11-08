@@ -3,110 +3,310 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Zhe(Joe) Deng's Website</title>
+    <title>Zhe (Joe) Deng | Assistant Professor of DSS</title>
+
+    <!-- Google-style font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap"
+        rel="stylesheet"
+    >
+
     <style>
+        :root {
+            --primary: #1a73e8;          /* Google blue */
+            --primary-light: #e8f0fe;
+            --text-main: #202124;
+            --text-muted: #5f6368;
+            --bg: #f1f3f4;
+            --card-bg: #ffffff;
+            --border-subtle: #dadce0;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: Arial, sans-serif;
+            margin: 0;
+            font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
             line-height: 1.6;
+        }
+
+        a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        /* Top App Bar */
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background-color: #ffffff;
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .top-bar {
+            max-width: 1120px;
+            margin: 0 auto;
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .logo-text {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 500;
+            font-size: 1rem;
+            color: var(--primary);
+        }
+
+        .logo-circle {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: var(--primary);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 0.8rem;
+            font-weight: 700;
+        }
+
+        nav ul {
+            list-style: none;
+            display: flex;
+            gap: 18px;
             margin: 0;
             padding: 0;
-            background-color: #f9f9f9;
+            font-size: 0.95rem;
         }
-        header {
-            background-color: #f4f4f4;
-            padding: 20px;
-            text-align: center;
-            box-shadow: 0 4px 2px -2px gray;
+
+        nav a {
+            color: var(--text-muted);
+            font-weight: 400;
         }
-        header img {
+
+        nav a:hover {
+            color: var(--primary);
+        }
+
+        /* Layout */
+        main {
+            max-width: 1120px;
+            margin: 24px auto 40px;
+            padding: 0 20px 20px;
+            display: grid;
+            grid-template-columns: minmax(0, 2.2fr) minmax(260px, 1.2fr);
+            gap: 24px;
+        }
+
+        /* Hero card (left column top) */
+        .hero-card {
+            grid-column: 1 / -1;
+            background-color: #ffffff;
+            border-radius: 12px;
+            padding: 24px 24px 20px;
+            border: 1px solid var(--border-subtle);
+            display: grid;
+            grid-template-columns: 120px 1fr;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .hero-photo {
+            width: 120px;
+            height: 120px;
             border-radius: 50%;
-            width: 150px;
-            height: 150px;
+            overflow: hidden;
+            background-color: var(--primary-light);
         }
-        header h1 {
-            font-size: 2em;
-            margin: 10px 0;
-        }
-        header p {
-            font-size: 1.1em;
-            color: #555;
-        }
-        section {
-            padding: 20px;
-        }
-        h2 {
-            color: #333;
-            font-size: 1.5em;
-            border-bottom: 2px solid #ddd;
-            padding-bottom: 5px;
-        }
-        .content {
-            max-width: 800px;
-            margin: 0 auto;
-            background-color: white;
-            padding: 20px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            border-radius: 8px;
-        }
-        p {
-            font-size: 1.1em;
-            color: #333;
-        }
-        footer {
-            text-align: center;
-            padding: 10px;
-            background-color: #f4f4f4;
-            color: #555;
-            position: relative;
-            bottom: 0;
+
+        .hero-photo img {
             width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
 
-        /* Media Queries for responsiveness */
-        @media (max-width: 768px) {
-            header img {
-                width: 120px;
-                height: 120px;
+        .hero-main h1 {
+            font-size: 1.7rem;
+            margin: 0 0 4px;
+            font-weight: 500;
+        }
+
+        .hero-main h2 {
+            margin: 0 0 6px;
+            font-size: 1.02rem;
+            font-weight: 400;
+            color: var(--text-muted);
+        }
+
+        .hero-main p {
+            margin: 4px 0;
+            font-size: 0.95rem;
+            color: var(--text-muted);
+        }
+
+        .chips {
+            margin-top: 8px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .chip {
+            padding: 4px 10px;
+            border-radius: 999px;
+            background: var(--primary-light);
+            font-size: 0.78rem;
+            color: var(--primary);
+            font-weight: 500;
+        }
+
+        .hero-actions {
+            margin-top: 10px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 7px 14px;
+            border-radius: 999px;
+            border: 1px solid var(--border-subtle);
+            background-color: #ffffff;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--primary);
+            cursor: pointer;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            border-color: var(--primary);
+            color: #ffffff;
+        }
+
+        .btn:hover {
+            background-color: var(--primary-light);
+        }
+
+        .btn-primary:hover {
+            background-color: #1765cc;
+        }
+
+        /* Cards */
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 18px 20px 18px;
+            border: 1px solid var(--border-subtle);
+            margin-bottom: 16px;
+        }
+
+        .card h3 {
+            margin: 0 0 8px;
+            font-size: 1.05rem;
+            font-weight: 500;
+        }
+
+        .card h4 {
+            margin: 8px 0 2px;
+            font-size: 0.95rem;
+            font-weight: 500;
+        }
+
+        .card p {
+            margin: 2px 0 4px;
+            font-size: 0.9rem;
+        }
+
+        .meta {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .list-tight {
+            list-style: none;
+            padding-left: 0;
+            margin: 4px 0 0;
+        }
+
+        .list-tight li {
+            font-size: 0.9rem;
+            padding: 2px 0;
+        }
+
+        .section-title {
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--text-muted);
+            margin: 0 0 4px;
+        }
+
+        /* Footer */
+        footer {
+            border-top: 1px solid var(--border-subtle);
+            background-color: #ffffff;
+            padding: 12px 20px 18px;
+            text-align: center;
+            font-size: 0.84rem;
+            color: var(--text-muted);
+        }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            main {
+                grid-template-columns: 1fr;
             }
-            header h1 {
-                font-size: 1.8em;
-            }
-            header p {
-                font-size: 1em;
-            }
-            section {
-                padding: 15px;
-            }
-            h2 {
-                font-size: 1.3em;
-            }
-            p {
-                font-size: 1em;
+
+            .hero-card {
+                grid-template-columns: 90px 1fr;
             }
         }
 
-        @media (max-width: 480px) {
-            header img {
-                width: 100px;
-                height: 100px;
+        @media (max-width: 600px) {
+            .top-bar {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 6px;
             }
-            header h1 {
-                font-size: 1.5em;
+
+            nav ul {
+                flex-wrap: wrap;
             }
-            header p {
-                font-size: 0.9em;
+
+            .hero-card {
+                grid-template-columns: 1fr;
             }
-            section {
-                padding: 10px;
+
+            .hero-photo {
+                margin: 0 auto;
             }
-            .content {
-                padding: 15px;
+
+            .hero-main {
+                text-align: center;
             }
-            h2 {
-                font-size: 1.2em;
-            }
-            p {
-                font-size: 0.9em;
+
+            .chips,
+            .hero-actions {
+                justify-content: center;
             }
         }
     </style>
@@ -114,35 +314,246 @@
 <body>
 
 <header>
-    <img src="your-photo.jpg" alt="Professor's Photo">
-    <h1>Professor's Name</h1>
-    <p>Email: <a href="mailto:professor.email@example.com">professor.email@example.com</a> | Phone: 123-456-7890</p>
+    <div class="top-bar">
+        <div class="logo-text">
+            <span class="logo-circle">ZD</span>
+            <span>Zhe (Joe) Deng</span>
+        </div>
+        <nav>
+            <ul>
+                <li><a href="#research">Research</a></li>
+                <li><a href="#teaching">Teaching</a></li>
+                <li><a href="#grants">Grants</a></li>
+                <li><a href="#service">Service</a></li>
+                <li><a href="#contact">Contact</a></li>
+            </ul>
+        </nav>
+    </div>
 </header>
 
-<section class="content">
-    <h2>Education Background</h2>
-    <p>Ph.D. in [Your Field], [University Name], [Year]</p>
-    <p>M.Sc. in [Your Field], [University Name], [Year]</p>
-    <p>B.Sc. in [Your Field], [University Name], [Year]</p>
-</section>
+<main>
+    <!-- Hero -->
+    <section class="hero-card" id="top">
+        <div class="hero-photo">
+            <!-- 把 photo.jpg 换成你的真实文件名 -->
+            <img src="photo.jpg" alt="Zhe (Joe) Deng">
+        </div>
+        <div class="hero-main">
+            <h1>Zhe (Joe) Deng</h1>
+            <h2>Assistant Professor, Decision &amp; System Sciences</h2>
+            <p>Haub School of Business, Saint Joseph's University</p>
+            <p class="meta">
+                Co-Chair, AI Committee, Haub School of Business
+            </p>
+            <div class="chips">
+                <span class="chip">IS &amp; Education</span>
+                <span class="chip">Emerging Tech Policy</span>
+                <span class="chip">Healthcare &amp; SCM Analytics</span>
+                <span class="chip">Field Experiments</span>
+                <span class="chip">ML &amp; Econometrics</span>
+            </div>
+            <div class="hero-actions">
+                <!-- 把 pdf 文件上传到仓库后，这个链接就可以直接用 -->
+                <a class="btn-primary btn" href="ZheDeng_CV_May2025.pdf" target="_blank" rel="noopener">Download CV (PDF)</a>
+                <a class="btn" href="#contact">Email / Contact</a>
+            </div>
+        </div>
+    </section>
 
-<section class="content">
-    <h2>Research</h2>
-    <p>My research focuses on [research topics]. I am particularly interested in [specific research areas]. You can find my published papers [here](#) or contact me for more information.</p>
-</section>
+    <!-- Left column: Research, Teaching, Grants -->
+    <section>
+        <!-- Research -->
+        <article class="card" id="research">
+            <p class="section-title">Research</p>
+            <h3>Research Interests</h3>
+            <p>
+                My research explores how data, digital platforms, and emerging technologies
+                shape learning, attention, and performance across education, healthcare,
+                and supply chains.
+            </p>
 
-<section class="content">
-    <h2>Teaching</h2>
-    <p>I have been teaching [courses] at [University Name] for [years]. My teaching interests include [teaching interests or subjects].</p>
-</section>
+            <h4>Topics</h4>
+            <ul class="list-tight">
+                <li>Information systems and education</li>
+                <li>Policies for emerging technologies</li>
+                <li>Information systems and healthcare</li>
+                <li>Supply chain management and analytics</li>
+                <li>Video analytics and multimodal learning</li>
+            </ul>
 
-<section class="content">
-    <h2>Interests</h2>
-    <p>In my free time, I enjoy [your hobbies and interests, e.g., hiking, reading, traveling].</p>
-</section>
+            <h4>Methods</h4>
+            <ul class="list-tight">
+                <li>Randomized field experiments</li>
+                <li>Econometrics and causal inference</li>
+                <li>Machine learning and deep learning</li>
+            </ul>
+
+            <h4>Publication</h4>
+            <ul class="list-tight">
+                <li>
+                    Deng, Z., Z. Cheng, P. Ferreira, and P. A. Pavlou.
+                    <em>From Smartphones to Smart Students: Learning versus Distraction with
+                        Mobile Devices in the Classroom and Student Success.</em>
+                    Forthcoming, <em>Information Systems Research</em>.
+                </li>
+            </ul>
+
+            <h4>Selected Working Papers</h4>
+            <ul class="list-tight">
+                <li>
+                    Y. Chu, Deng, Z., W. Wang, P. Ferreira.
+                    <em>From Views to Learning: How Information Cues Transform Video-Based Online Education.</em>
+                    Preparing for <em>Management Science</em>.
+                </li>
+                <li>
+                    Deng, Z., J. Jung, P. A. Pavlou, and Q. Sun.
+                    <em>Would Unlimited Internet Lead to Unlimited Learning? A Field Experiment of Internet Policy on Educational Outcomes.</em>
+                </li>
+                <li>
+                    Deng, Z., S. Ayabakan, S. Kumar, and P. A. Pavlou.
+                    <em>Patient-sharing Network, EHR Adoption, and Patient Outcomes: An Empirical Investigation.</em>
+                </li>
+            </ul>
+
+            <h4>Work in Progress</h4>
+            <ul class="list-tight">
+                <li>Student depression detection using attention-based Bi-LSTM on online &amp; offline behavior data.</li>
+                <li>User-generated videos in climate change education.</li>
+                <li>Student reaction and tutor teaching satisfaction from online class video feeds.</li>
+            </ul>
+        </article>
+
+        <!-- Teaching -->
+        <article class="card" id="teaching">
+            <p class="section-title">Teaching</p>
+            <h3>Courses</h3>
+            <p class="meta">Saint Joseph's University, Haub School of Business</p>
+
+            <h4>Business Intelligence &amp; Analytics</h4>
+            <ul class="list-tight">
+                <li>DSS 315 – BIA Concepts &amp; Practices (Spring 2024)</li>
+            </ul>
+
+            <h4>Supply Chain Management &amp; Analytics</h4>
+            <ul class="list-tight">
+                <li>DSS 335 – Foundations of Supply Chain Management (Fall 2023, Fall 2024)</li>
+                <li>DSS 465/710 – Supply Chain Analytics (Fall 2023, Fall 2024)</li>
+            </ul>
+
+            <h4>Quality Control</h4>
+            <ul class="list-tight">
+                <li>DSS 720 – Six Sigma Applications &amp; Foundations (Spring 2024)</li>
+            </ul>
+
+            <p>
+                I enjoy bringing field experiments, real-world datasets, and AI tools into the classroom
+                so that students can experience both the power and the limits of data-driven decision making.
+            </p>
+        </article>
+
+        <!-- Grants -->
+        <article class="card" id="grants">
+            <p class="section-title">Funding &amp; Grants</p>
+            <h3>Selected Grants</h3>
+            <ul class="list-tight">
+                <li>
+                    Milton Lev Faculty Research Grant, Saint Joseph's University – “How Information Cues Transform
+                    Video-Based Online Education? Combining Randomized Experiments and Multimodal Machine Learning.”
+                </li>
+                <li>
+                    Summer Research Fund, Saint Joseph's University – “Would Unlimited Internet Lead to Unlimited Learning?
+                    A Field Experiment of Internet Policy on Educational Outcomes.”
+                </li>
+                <li>
+                    Multiple Young Scholar Forum and Seed Funding grants, Temple University, supporting projects on
+                    student depression detection, mobile distraction in class, and healthcare networks.
+                </li>
+            </ul>
+        </article>
+    </section>
+
+    <!-- Right column: Positions, Education, Honors, Service, Contact -->
+    <aside>
+        <!-- Academic Experience -->
+        <article class="card">
+            <p class="section-title">Academic Experience</p>
+            <h3>Appointments</h3>
+            <h4>Saint Joseph's University</h4>
+            <p class="meta">Assistant Professor, Decision and System Sciences<br>Aug 2023 – Present · Philadelphia, PA</p>
+            <p class="meta">Co-Chair, AI Committee, Haub School of Business</p>
+
+            <h4>Carnegie Mellon University</h4>
+            <p class="meta">Post-Doctoral Research Fellow, Heinz College<br>Mar 2022 – Mar 2023 · Pittsburgh, PA</p>
+
+            <h4>Temple University</h4>
+            <p class="meta">Research Assistant &amp; Instructor, Fox School of Business<br>Aug 2016 – May 2022 · Philadelphia, PA</p>
+        </article>
+
+        <!-- Education -->
+        <article class="card">
+            <p class="section-title">Education</p>
+            <h3>Degrees</h3>
+            <h4>Temple University</h4>
+            <p class="meta">Ph.D. in Management Information Systems (Presidential Fellowship)</p>
+
+            <h4>University of Florida</h4>
+            <p class="meta">M.S. in Information Systems &amp; Operations Management</p>
+
+            <h4>Northwest University (China)</h4>
+            <p class="meta">
+                B.S. in Information Management &amp; Information Systems (Magna Cum Laude)
+            </p>
+        </article>
+
+        <!-- Honors -->
+        <article class="card">
+            <p class="section-title">Honors</p>
+            <h3>Awards</h3>
+            <ul class="list-tight">
+                <li>Presidential Fellowship, Temple University (five-year university-level PhD award)</li>
+                <li>First Prize Scholarship (Magna Cum Laude), Northwest University</li>
+                <li>Outstanding Student Leader, Northwest University</li>
+            </ul>
+        </article>
+
+        <!-- Service -->
+        <article class="card" id="service">
+            <p class="section-title">Service</p>
+            <h3>Academic Service</h3>
+            <ul class="list-tight">
+                <li>Session Chair – INFORMS Annual Meeting</li>
+                <li>Reviewer – MIS Quarterly</li>
+                <li>Reviewer – Electronic Commerce Research and Applications</li>
+                <li>Reviewer – ICIS, CIST, WITS, ECIS, PACIS, NEAIS, and other conferences</li>
+            </ul>
+
+            <h4>Industry &amp; External Roles</h4>
+            <ul class="list-tight">
+                <li>External researcher for institutions including Shaanxi Business College, Panabit, Nroad Net, and others.</li>
+            </ul>
+        </article>
+
+        <!-- Contact -->
+        <article class="card" id="contact">
+            <p class="section-title">Contact</p>
+            <h3>Get in Touch</h3>
+            <p class="meta">
+                The best way to reach me is email.
+            </p>
+            <p>
+                <strong>Email:</strong> <a href="mailto:zdeng@sju.edu">zdeng@sju.edu</a><br>
+                <strong>Address:</strong> Mandeville Hall 347, 5600 City Ave, Philadelphia, PA 19131
+            </p>
+            <p>
+                I am happy to talk with students, collaborators, and practitioners interested
+                in data-driven education, AI in business, and digital experimentation.
+            </p>
+        </article>
+    </aside>
+</main>
 
 <footer>
-    <p>&copy; 2024 Professor's Name. All Rights Reserved.</p>
+    &copy; 2025 Zhe (Joe) Deng. All rights reserved.
 </footer>
 
 </body>

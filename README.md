@@ -1,4 +1,3 @@
-# hello-world
-This is my first repository !
+# hello-world, This is Joe Deng
+This is Joe Deng's website!
 
-Let's make some changes for this very first readme file in the very first repository!

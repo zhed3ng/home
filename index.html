@@ -113,7 +113,7 @@
             gap: 24px;
         }
 
-        /* Hero card (left column top) */
+        /* Hero card (top) */
         .hero-card {
             grid-column: 1 / -1;
             background-color: #ffffff;
@@ -260,6 +260,29 @@
             margin: 0 0 4px;
         }
 
+        /* News list */
+        .updates-container {
+            max-height: 200px;
+            overflow-y: auto;
+            padding-left: 10px;
+            border-left: 3px solid var(--primary-light);
+        }
+
+        .update-item {
+            margin-bottom: 10px;
+        }
+
+        .update-date {
+            font-size: 0.78rem;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--text-muted);
+        }
+
+        .update-text {
+            font-size: 0.9rem;
+        }
+
         /* Footer */
         footer {
             border-top: 1px solid var(--border-subtle);
@@ -321,6 +344,8 @@
         </div>
         <nav>
             <ul>
+                <li><a href="#chatbot">Chatbot</a></li>
+                <li><a href="#news">News</a></li>
                 <li><a href="#research">Research</a></li>
                 <li><a href="#teaching">Teaching</a></li>
                 <li><a href="#grants">Grants</a></li>
@@ -335,8 +360,8 @@
     <!-- Hero -->
     <section class="hero-card" id="top">
         <div class="hero-photo">
-            <!-- 把 photo.jpg 换成你的真实文件名--------------------------------------------------------------------------------- ------------------------->
-            <img src="zhe-deng-sju-headshot-min.jpg" alt="Zhe (Joe) Deng">
+            <!-- 把 photo.jpg 换成你的真实文件名 -->
+            <img src="photo.jpg" alt="Zhe (Joe) Deng">
         </div>
         <div class="hero-main">
             <h1>Zhe (Joe) Deng</h1>
@@ -353,15 +378,85 @@
                 <span class="chip">ML &amp; Econometrics</span>
             </div>
             <div class="hero-actions">
-                <!-- 把 pdf 文件上传到仓库后，这个链接就可以直接用 ------------------------------------------------------------------------------------------->
+                <!-- 把 pdf 文件上传到仓库后，这个链接就可以直接用 -->
                 <a class="btn-primary btn" href="ZheDeng_CV_May2025.pdf" target="_blank" rel="noopener">Download CV (PDF)</a>
                 <a class="btn" href="#contact">Email / Contact</a>
             </div>
         </div>
     </section>
 
-    <!-- Left column: Research, Teaching, Grants -->
+    <!-- Left column: chatbot, news, research, teaching, grants -->
     <section>
+        <!-- NEW: Chatbot module -->
+        <article class="card" id="chatbot">
+            <p class="section-title">AI Chatbot</p>
+            <h3>Ask “Joe” – Personalized Chatbot</h3>
+            <p>
+                I am building a customized AI chatbot powered by my own OpenAI API key and my research,
+                teaching, and service documents. The goal is to let visitors have a conversation with a
+                “virtual Joe Deng” to learn more about my work, courses, and projects.
+            </p>
+            <ul class="list-tight">
+                <li>Trained on selected papers, syllabi, and project descriptions.</li>
+                <li>Answer questions about my research interests and ongoing projects.</li>
+                <li>Help students understand my courses and how to work with me.</li>
+            </ul>
+            <p class="meta">
+                (Prototype – the backend will securely call the OpenAI API and retrieve answers from
+                my own document collection.)
+            </p>
+            <div class="hero-actions">
+                <!-- 以后你可以把这个链接改成真正的聊天页面，比如 /chat.html -->
+                <a class="btn-primary btn" href="#chatbot" onclick="alert('Chatbot coming soon – work in progress!'); return false;">
+                    Launch Chatbot
+                </a>
+                <a class="btn" href="mailto:zdeng@sju.edu">Suggest Features</a>
+            </div>
+        </article>
+
+        <!-- NEW: News / Updates module -->
+        <article class="card" id="news">
+            <p class="section-title">News &amp; Updates</p>
+            <h3>Recent Highlights</h3>
+            <p class="meta">
+                A rolling feed of recent publications, interviews, talks, and other updates.
+            </p>
+            <div class="updates-container">
+                <!-- 下面这些是示例，你可以根据实际情况改 -->
+                <div class="update-item">
+                    <div class="update-date">2024 · Publication</div>
+                    <div class="update-text">
+                        <strong>“From Smartphones to Smart Students”</strong> accepted at
+                        <em>Information Systems Research</em>.
+                    </div>
+                </div>
+
+                <div class="update-item">
+                    <div class="update-date">2024 · Media</div>
+                    <div class="update-text">
+                        Interviewed by [Media Outlet] on the impact of classroom smartphone policies
+                        on student learning outcomes.
+                    </div>
+                </div>
+
+                <div class="update-item">
+                    <div class="update-date">2023 · Talk</div>
+                    <div class="update-text">
+                        Gave an invited talk on AI in education and digital experimentation at
+                        [Institution / Workshop Name].
+                    </div>
+                </div>
+
+                <div class="update-item">
+                    <div class="update-date">2023 · Grant</div>
+                    <div class="update-text">
+                        Received the Milton Lev Faculty Research Grant at Saint Joseph's University for
+                        a project on information cues and video-based online education.
+                    </div>
+                </div>
+            </div>
+        </article>
+
         <!-- Research -->
         <article class="card" id="research">
             <p class="section-title">Research</p>
@@ -507,54 +602,4 @@
 
         <!-- Honors -->
         <article class="card">
-            <p class="section-title">Honors</p>
-            <h3>Awards</h3>
-            <ul class="list-tight">
-                <li>Presidential Fellowship, Temple University (five-year university-level PhD award)</li>
-                <li>First Prize Scholarship (Magna Cum Laude), Northwest University</li>
-                <li>Outstanding Student Leader, Northwest University</li>
-            </ul>
-        </article>
-
-        <!-- Service -->
-        <article class="card" id="service">
-            <p class="section-title">Service</p>
-            <h3>Academic Service</h3>
-            <ul class="list-tight">
-                <li>Session Chair – INFORMS Annual Meeting</li>
-                <li>Reviewer – MIS Quarterly</li>
-                <li>Reviewer – Electronic Commerce Research and Applications</li>
-                <li>Reviewer – ICIS, CIST, WITS, ECIS, PACIS, NEAIS, and other conferences</li>
-            </ul>
-
-            <h4>Industry &amp; External Roles</h4>
-            <ul class="list-tight">
-                <li>External researcher for institutions including Shaanxi Business College, Panabit, Nroad Net, and others.</li>
-            </ul>
-        </article>
-
-        <!-- Contact -->
-        <article class="card" id="contact">
-            <p class="section-title">Contact</p>
-            <h3>Get in Touch</h3>
-            <p class="meta">
-                The best way to reach me is email.
-            </p>
-            <p>
-                <strong>Email:</strong> <a href="mailto:zdeng@sju.edu">zdeng@sju.edu</a><br>
-                <strong>Address:</strong> Mandeville Hall 347, 5600 City Ave, Philadelphia, PA 19131
-            </p>
-            <p>
-                I am happy to talk with students, collaborators, and practitioners interested
-                in data-driven education, AI in business, and digital experimentation.
-            </p>
-        </article>
-    </aside>
-</main>
-
-<footer>
-    &copy; 2025 Zhe (Joe) Deng. All rights reserved.
-</footer>
-
-</body>
-</html>
+            <p class="section-tit

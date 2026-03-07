@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin - Update Website Content</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 900px; margin: 20px auto; padding: 0 16px; }
+    textarea { width: 100%; min-height: 420px; font-family: monospace; font-size: 14px; }
+    .row { margin: 12px 0; }
+    input { padding: 8px; width: 280px; }
+    button { padding: 8px 14px; }
+    #status { margin-top: 8px; color: #444; }
+  </style>
+</head>
+<body>
+  <h1>Website Content Admin</h1>
+  <p>Edit JSON below and click Save.</p>
+
+  <div class="row">
+    <label for="token"><strong>Admin Token</strong></label><br>
+    <input id="token" type="password" placeholder="X-Admin-Token" />
+  </div>
+
+  <div class="row">
+    <button id="loadBtn">Load</button>
+    <button id="saveBtn">Save</button>
+    <div id="status"></div>
+  </div>
+
+  <textarea id="editor"></textarea>
+
+  <script>
+    const statusEl = document.getElementById('status');
+    const editor = document.getElementById('editor');
+
+    function setStatus(msg, isError = false) {
+      statusEl.textContent = msg;
+      statusEl.style.color = isError ? '#b00020' : '#1b5e20';
+    }
+
+    async function loadContent() {
+      setStatus('Loading...');
+      const res = await fetch('/api/content');
+      if (!res.ok) {
+        setStatus(`Load failed: ${res.status}`, true);
+        return;
+      }
+      const data = await res.json();
+      editor.value = JSON.stringify(data, null, 2);
+      setStatus('Loaded.');
+    }
+
+    async function saveContent() {
+      let parsed;
+      try {
+        parsed = JSON.parse(editor.value);
+      } catch (err) {
+        setStatus(`Invalid JSON: ${err.message}`, true);
+        return;
+      }
+
+      const token = document.getElementById('token').value;
+      setStatus('Saving...');
+      const res = await fetch('/api/content', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Admin-Token': token
+        },
+        body: JSON.stringify(parsed)
+      });
+
+      if (!res.ok) {
+        const body = await res.text();
+        setStatus(`Save failed: ${res.status} ${body}`, true);
+        return;
+      }
+
+      setStatus('Saved successfully. Refresh homepage to verify changes.');
+    }
+
+    document.getElementById('loadBtn').addEventListener('click', loadContent);
+    document.getElementById('saveBtn').addEventListener('click', saveContent);
+
+    loadContent();
+  </script>
+</body>
+</html>

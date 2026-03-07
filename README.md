@@ -1,10 +1,28 @@
-# Personal Academic Website (Simplified)
+# Personal Academic Website (Standardized, Lightweight)
 
-This project is intentionally kept **simple**:
-- `index.html`: main website page (your full academic homepage)
-- `admin.html`: small admin page to edit content JSON
-- `backend_app.py`: lightweight backend API + static file server
-- `content.json`: editable content data (currently News)
+这个版本保持**轻量**，但采用了更“商业网站风格”的标准目录组织：
+
+```text
+.
+├── public/
+│   ├── index.html
+│   ├── admin.html
+│   └── assets/
+│       ├── css/site.css
+│       └── js/{site.js,admin.js}
+├── server/
+│   └── backend_app.py
+├── data/
+│   └── content.json
+└── backend_app.py   # 启动入口（兼容）
+```
+
+## Features
+
+- 单页官网（完整学术内容）
+- 后端 API 管理内容（当前管理 News）
+- Admin Console 在线编辑 `content.json`
+- 前端样式与脚本分离，便于维护与扩展
 
 ## Run locally
 
@@ -21,9 +39,9 @@ Open:
 
 - `GET /api/health` → health check
 - `GET /api/content` → read content
-- `PUT /api/content` → update content (requires header `X-Admin-Token`)
+- `PUT /api/content` → update content (header: `X-Admin-Token`)
 
-Example update:
+Example:
 
 ```bash
 curl -X PUT http://127.0.0.1:8000/api/content \
@@ -32,4 +50,7 @@ curl -X PUT http://127.0.0.1:8000/api/content \
   -d '{"news":[{"date":"2026 · Update","text":"New item"}]}'
 ```
 
-This keeps maintenance easy while still allowing backend-managed updates.
+## Why this structure
+
+相比把所有内容塞在单文件里，这个结构更清晰；
+相比完整前端工程（React/Vite + 很多目录），这个结构更轻，适合个人主页长期维护。

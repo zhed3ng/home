@@ -16,7 +16,10 @@ PORT = int(os.getenv("PORT", "8000"))
 
 ROUTES = {
     "/": "index.html",
+    "/index.html": "index.html",
+    "/public/index.html": "index.html",
     "/admin": "admin.html",
+    "/admin.html": "admin.html",
 }
 
 

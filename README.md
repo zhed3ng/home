@@ -98,3 +98,18 @@ git push --force-with-lease origin <your-pr-branch>
 
 - `/index.html` 与 `/public/index.html` 都会映射到首页，避免历史链接 404。
 - `/admin.html` 会映射到后台页。
+
+
+## Conflict Guard (防止把冲突标记上线)
+
+新增了自动检查脚本与 CI：
+
+- 本地检查：
+
+```bash
+./scripts/check_conflict_markers.sh
+```
+
+- GitHub Actions 会在 push / PR 时自动执行同样检查（`.github/workflows/conflict-guard.yml`）。
+
+这样如果代码里残留 `<<<<<<<` / `=======` / `>>>>>>>`，CI 会直接失败，避免再次上线异常首页。

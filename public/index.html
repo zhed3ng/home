@@ -1,6 +1,22 @@
+<<<<<<< HEAD
 <!DOCTYPE html>
 <html lang="en">
 <head>
+=======
+<!doctype html>
+<html lang="en">
+<head>
+<<<<<<<< HEAD:index.html
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Redirecting…</title>
+  <meta http-equiv="refresh" content="0; url=/" />
+  <script>window.location.replace('/');</script>
+</head>
+<body>
+  <p>Project homepage moved to <a href="/">/</a>.</p>
+========
+>>>>>>> origin/master
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Official academic website of Zhe (Joe) Deng: research, teaching, publications, grants, and contact." />
@@ -125,6 +141,7 @@
                 A rolling feed of recent publications, interviews, talks, and other updates.
             </p>
             <div class="updates-container" id="news-updates">
+<<<<<<< HEAD
                 <!-- 下面这些是示例，你可以根据实际情况改 -->
                 <!-- ************** -->
                 <div class="update-item">
@@ -159,6 +176,13 @@
                     </div>
                 </div>
                 <!-- ************** -->
+=======
+                <!-- Fallback content if backend is unavailable -->
+                <div class="update-item">
+                    <div class="update-date">2024 · Publication</div>
+                    <div class="update-text">“From Smartphones to Smart Students” accepted at Information Systems Research.</div>
+                </div>
+>>>>>>> origin/master
             </div>
         </article>
 
@@ -391,8 +415,48 @@
 </footer>
 
 
+<<<<<<< HEAD
         <script src="/assets/js/site.js"></script>
 
 
+=======
+<script>
+    (async function loadNewsFromBackend() {
+        const container = document.getElementById('news-updates');
+        if (!container) return;
+
+        try {
+            const response = await fetch('/api/content');
+            if (!response.ok) return;
+
+            const data = await response.json();
+            if (!data || !Array.isArray(data.news)) return;
+
+            container.innerHTML = '';
+            data.news.forEach((item) => {
+                if (!item || typeof item.date !== 'string' || typeof item.text !== 'string') return;
+
+                const wrapper = document.createElement('div');
+                wrapper.className = 'update-item';
+
+                const date = document.createElement('div');
+                date.className = 'update-date';
+                date.textContent = item.date;
+
+                const text = document.createElement('div');
+                text.className = 'update-text';
+                text.textContent = item.text;
+
+                wrapper.appendChild(date);
+                wrapper.appendChild(text);
+                container.appendChild(wrapper);
+            });
+        } catch (err) {
+            console.warn('Unable to load backend content:', err);
+        }
+    })();
+</script>
+>>>>>>>> origin/master:public/index.html
+>>>>>>> origin/master
 </body>
 </html>

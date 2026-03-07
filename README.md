@@ -1,38 +1,56 @@
-# Joe Deng Personal Website
+# Personal Academic Website (Standardized, Lightweight)
 
-A lightweight personal academic website with a small backend for content updates.
+这个版本保持**轻量**，但采用了更“商业网站风格”的标准目录组织：
 
-## Project structure
+```text
+.
+├── public/
+│   ├── index.html
+│   ├── admin.html
+│   └── assets/
+│       ├── css/site.css
+│       └── js/{site.js,admin.js}
+├── server/
+│   └── backend_app.py
+├── data/
+│   └── content.json
+└── backend_app.py   # 启动入口（兼容）
+```
 
-- `index.html`: public homepage.
-- `admin.html`: admin panel to edit website content JSON.
-- `backend_app.py`: zero-dependency Python backend API and static file server.
-- `content.json`: editable website content source (currently used for News updates).
+## Features
+
+- 单页官网（完整学术内容）
+- 后端 API 管理内容（当前管理 News）
+- Admin Console 在线编辑 `content.json`
+- 前端样式与脚本分离，便于维护与扩展
 
 ## Run locally
 
-1. Start server (set your own admin token first):
-
 ```bash
-export ADMIN_TOKEN='replace-with-your-secret'
+export ADMIN_TOKEN=your_token_here
 python backend_app.py
 ```
 
-2. Open:
-
-- Homepage: `http://localhost:8000/`
-- Admin panel: `http://localhost:8000/admin`
-
-## Update content workflow
-
-1. Open `/admin`.
-2. Click **Load** to fetch current JSON.
-3. Edit the `news` list in JSON.
-4. Enter the `ADMIN_TOKEN` value.
-5. Click **Save**.
-6. Refresh homepage to see updates.
+Open:
+- Site: http://127.0.0.1:8000/
+- Admin: http://127.0.0.1:8000/admin
 
 ## API
 
-- `GET /api/content`: get current content JSON.
-- `PUT /api/content`: update content JSON, requires header `X-Admin-Token`.
+- `GET /api/health` → health check
+- `GET /api/content` → read content
+- `PUT /api/content` → update content (header: `X-Admin-Token`)
+
+Example:
+
+```bash
+curl -X PUT http://127.0.0.1:8000/api/content \
+  -H 'Content-Type: application/json' \
+  -H 'X-Admin-Token: your_token_here' \
+  -d '{"news":[{"date":"2026 · Update","text":"New item"}]}'
+```
+
+## Why this structure
+
+相比把所有内容塞在单文件里，这个结构更清晰；
+相比完整前端工程（React/Vite + 很多目录），这个结构更轻，适合个人主页长期维护。

@@ -438,41 +438,12 @@
             <p class="meta">
                 A rolling feed of recent publications, interviews, talks, and other updates.
             </p>
-            <div class="updates-container">
-                <!-- 下面这些是示例，你可以根据实际情况改 -->
-                <!-- ************** -->
+            <div class="updates-container" id="news-updates">
+                <!-- Fallback content if backend is unavailable -->
                 <div class="update-item">
                     <div class="update-date">2024 · Publication</div>
-                    <div class="update-text">
-                        <strong>“From Smartphones to Smart Students”</strong> accepted at
-                        <em>Information Systems Research</em>.
-                    </div>
+                    <div class="update-text">“From Smartphones to Smart Students” accepted at Information Systems Research.</div>
                 </div>
-
-                <div class="update-item">
-                    <div class="update-date">2024 · Media</div>
-                    <div class="update-text">
-                        Interviewed by [Media Outlet] on the impact of classroom smartphone policies
-                        on student learning outcomes.
-                    </div>
-                </div>
-
-                <div class="update-item">
-                    <div class="update-date">2023 · Talk</div>
-                    <div class="update-text">
-                        Gave an invited talk on AI in education and digital experimentation at
-                        [Institution / Workshop Name].
-                    </div>
-                </div>
-
-                <div class="update-item">
-                    <div class="update-date">2023 · Grant</div>
-                    <div class="update-text">
-                        Received the Milton Lev Faculty Research Grant at Saint Joseph's University for
-                        a project on information cues and video-based online education.
-                    </div>
-                </div>
-                <!-- ************** -->
             </div>
         </article>
 
@@ -704,5 +675,42 @@
     &copy; 2025 Zhe (Joe) Deng. All rights reserved.
 </footer>
 
+
+<script>
+    (async function loadNewsFromBackend() {
+        const container = document.getElementById('news-updates');
+        if (!container) return;
+
+        try {
+            const response = await fetch('/api/content');
+            if (!response.ok) return;
+
+            const data = await response.json();
+            if (!data || !Array.isArray(data.news)) return;
+
+            container.innerHTML = '';
+            data.news.forEach((item) => {
+                if (!item || typeof item.date !== 'string' || typeof item.text !== 'string') return;
+
+                const wrapper = document.createElement('div');
+                wrapper.className = 'update-item';
+
+                const date = document.createElement('div');
+                date.className = 'update-date';
+                date.textContent = item.date;
+
+                const text = document.createElement('div');
+                text.className = 'update-text';
+                text.textContent = item.text;
+
+                wrapper.appendChild(date);
+                wrapper.appendChild(text);
+                container.appendChild(wrapper);
+            });
+        } catch (err) {
+            console.warn('Unable to load backend content:', err);
+        }
+    })();
+</script>
 </body>
 </html>

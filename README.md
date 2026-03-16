@@ -35,6 +35,37 @@ Open:
 - Site: http://127.0.0.1:8000/
 - Admin: http://127.0.0.1:8000/admin
 
+
+
+## Admin email verification (新增)
+
+现在 Admin 支持“邮箱验证码登录”流程：
+
+1. 在 `/admin` 输入邮箱并点击 **Send Code**
+2. 后端向授权邮箱发送 6 位验证码
+3. 输入验证码点击 **Verify**，前端拿到 session token
+4. 保存内容时会自动使用该 token 调用 `PUT /api/content`
+
+默认只允许邮箱：`zhe.joe.deng@gmail.com`（可通过环境变量改）。
+
+### Required env vars for email sending
+
+```bash
+export ADMIN_EMAIL=zhe.joe.deng@gmail.com
+export SMTP_HOST=smtp.gmail.com
+export SMTP_PORT=587
+export SMTP_USERNAME=your_smtp_username
+export SMTP_PASSWORD=your_smtp_password
+export SMTP_USE_TLS=true
+export MAIL_FROM=your_smtp_username
+```
+
+可选：
+
+```bash
+export LOGIN_CODE_TTL_MINUTES=10
+```
+
 ## API
 
 - `GET /api/health` → health check

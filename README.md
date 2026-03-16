@@ -97,7 +97,7 @@ git push --force-with-lease origin <your-pr-branch>
 ## Compatibility Routes
 
 - `/index.html` 与 `/public/index.html` 都会映射到首页，避免历史链接 404。
-- `/admin.html` 会映射到后台页。
+- `/admin`、`/admin/`、`/admin.html` 都会映射到后台页。
 
 
 ## Conflict Guard (防止把冲突标记上线)

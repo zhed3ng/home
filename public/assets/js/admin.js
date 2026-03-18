@@ -1,9 +1,37 @@
 const editor = document.getElementById('editor');
 const statusEl = document.getElementById('status');
+const passwordEl = document.getElementById('password');
+
+let sessionToken = sessionStorage.getItem('adminSessionToken') || '';
 
 function setStatus(text, error = false) {
   statusEl.textContent = text;
   statusEl.style.color = error ? '#b00020' : '#1b5e20';
+}
+
+async function login() {
+  const password = passwordEl.value.trim();
+  if (!password) {
+    setStatus('Please enter your admin password first.', true);
+    return;
+  }
+
+  setStatus('Logging in...');
+  const res = await fetch('/api/admin/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ password }),
+  });
+
+  if (!res.ok) {
+    setStatus(`Login failed: ${res.status} ${await res.text()}`, true);
+    return;
+  }
+
+  const data = await res.json();
+  sessionToken = data.sessionToken || '';
+  sessionStorage.setItem('adminSessionToken', sessionToken);
+  setStatus('Logged in. You can now save content.');
 }
 
 async function loadContent() {
@@ -26,13 +54,17 @@ async function saveContent() {
     return;
   }
 
-  const token = document.getElementById('token').value;
+  if (!sessionToken) {
+    setStatus('Please log in first before saving.', true);
+    return;
+  }
+
   setStatus('Saving...');
   const res = await fetch('/api/content', {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
-      'X-Admin-Token': token,
+      'X-Admin-Token': sessionToken,
     },
     body: JSON.stringify(payload),
   });
@@ -45,6 +77,7 @@ async function saveContent() {
   setStatus('Saved');
 }
 
+document.getElementById('loginBtn').addEventListener('click', login);
 document.getElementById('loadBtn').addEventListener('click', loadContent);
 document.getElementById('saveBtn').addEventListener('click', saveContent);
 loadContent();

@@ -2,9 +2,11 @@ from __future__ import annotations
 
 import json
 import os
+import secrets
 from http import HTTPStatus
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
+from datetime import datetime, timedelta, timezone
 from urllib.parse import urlparse
 
 ROOT_DIR = Path(__file__).resolve().parent.parent
@@ -12,7 +14,11 @@ PUBLIC_DIR = ROOT_DIR / "public"
 DATA_DIR = ROOT_DIR / "data"
 CONTENT_PATH = DATA_DIR / "content.json"
 ADMIN_TOKEN = os.getenv("ADMIN_TOKEN", "change-me")
+ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", ADMIN_TOKEN)
+ADMIN_SESSION_HOURS = int(os.getenv("ADMIN_SESSION_HOURS", "12"))
 PORT = int(os.getenv("PORT", "8000"))
+
+active_admin_tokens: dict[str, datetime] = {}
 
 ROUTES = {
     "/": "index.html",
@@ -80,6 +86,24 @@ def validate_content(payload: object) -> tuple[bool, str]:
     return True, ""
 
 
+def _cleanup_expired_tokens() -> None:
+    now = datetime.now(timezone.utc)
+    for token in list(active_admin_tokens.keys()):
+        if active_admin_tokens[token] <= now:
+            del active_admin_tokens[token]
+
+
+def _is_valid_session_token(token: str) -> bool:
+    _cleanup_expired_tokens()
+    return token in active_admin_tokens
+
+
+def _issue_session_token() -> str:
+    token = secrets.token_urlsafe(32)
+    active_admin_tokens[token] = datetime.now(timezone.utc) + timedelta(hours=ADMIN_SESSION_HOURS)
+    return token
+
+
 class RequestHandler(SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=str(PUBLIC_DIR), **kwargs)
@@ -123,6 +147,35 @@ class RequestHandler(SimpleHTTPRequestHandler):
 
         self.send_error(HTTPStatus.NOT_FOUND, "Not Found")
 
+    def do_POST(self):
+        path = urlparse(self.path).path
+
+        if path == "/api/admin/login":
+            try:
+                payload = self._parse_json_body()
+            except Exception:
+                self._send_json(HTTPStatus.BAD_REQUEST, {"error": "invalid JSON payload"})
+                return
+
+            if not isinstance(payload, dict):
+                self._send_json(HTTPStatus.BAD_REQUEST, {"error": "payload must be an object"})
+                return
+
+            password = str(payload.get("password", "")).strip()
+            if not password:
+                self._send_json(HTTPStatus.BAD_REQUEST, {"error": "password is required"})
+                return
+
+            if password != ADMIN_PASSWORD:
+                self._send_json(HTTPStatus.UNAUTHORIZED, {"error": "invalid password"})
+                return
+
+            session_token = _issue_session_token()
+            self._send_json(HTTPStatus.OK, {"ok": True, "sessionToken": session_token})
+            return
+
+        self.send_error(HTTPStatus.NOT_FOUND, "Not Found")
+
     def do_PUT(self):
         path = urlparse(self.path).path
         if path != "/api/content":
@@ -130,7 +183,7 @@ class RequestHandler(SimpleHTTPRequestHandler):
             return
 
         token = self.headers.get("X-Admin-Token", "")
-        if token != ADMIN_TOKEN:
+        if token != ADMIN_TOKEN and not _is_valid_session_token(token):
             self._send_json(HTTPStatus.UNAUTHORIZED, {"error": "unauthorized"})
             return
 

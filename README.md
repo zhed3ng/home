@@ -3,7 +3,7 @@
 这个版本已经从原来的 Python + 静态 HTML 结构，升级为 **Next.js App Router + Vercel 全栈架构**：
 
 - 官网内容页继续保持简洁。
-- Admin 页面改成更正式的生产化后台。
+- Admin 页面升级为双层保护的生产化后台。
 - AskJoe 直接走服务端 AI route。
 - 内容数据不再依赖本地 `content.json`。
 - 内容与后台会话/验证码统一迁移到 **Vercel KV** 托管存储。
@@ -13,7 +13,7 @@
 - **Framework:** Next.js 15 (App Router)
 - **Hosting:** Vercel
 - **Content storage:** Vercel KV
-- **Admin email delivery:** Resend
+- **Admin email delivery / alerts:** Resend
 - **AI route:** OpenAI Responses API
 
 ## Local development
@@ -26,9 +26,29 @@ npm run dev
 默认访问：
 
 - `/`：主页
-- `/admin`：Admin Console
-- `/api/content`：读取/保存站点内容
+- `/admin`：Admin Console（需要先通过 gateway allowlist）
+- `/admin/api/content`：读取/保存站点内容
 - `/api/ask-joe`：AskJoe AI route
+
+## Admin security model
+
+Admin 现在采用“更强版本”的四层保护：
+
+1. `/admin*` 和 `/admin/api/*` 先经过 gateway allowlist。
+2. gateway 支持以下任一条件通过：
+   - 允许的 Google 身份头（如 Cloudflare Access / Google IAP 注入）
+   - 固定设备 token
+   - 固定国家
+   - 固定 IP
+3. 登录后仍需站内邮箱验证码二次验证。
+4. 管理接口全部迁移到 `/admin/api/*`，session cookie 只作用于 `/admin`。
+
+此外还增加了：
+
+- 验证码请求限流
+- 验证失败锁定
+- 审计日志（KV）
+- 安全告警邮件（Resend）
 
 ## Required environment variables
 
@@ -44,11 +64,32 @@ OPENAI_API_KEY=...
 ASK_JOE_MODEL=gpt-4.1-mini
 ```
 
-可选：
+## Recommended admin security environment variables
 
 ```bash
+ADMIN_ALLOWED_GOOGLE_EMAILS=you@gmail.com
+ADMIN_ALLOWED_IPS=203.0.113.10
+ADMIN_ALLOWED_COUNTRIES=US
+ADMIN_ALLOWED_DEVICE_TOKENS=your-fixed-device-token
+ADMIN_GATEWAY_BYPASS_SECRET=shared-secret-for-trusted-proxy
+ADMIN_ALERT_EMAIL=you@gmail.com
+ADMIN_SESSION_TTL_SECONDS=7200
+ADMIN_VERIFY_FAILURE_LIMIT=5
+ADMIN_VERIFY_LOCKOUT_MINUTES=15
+ADMIN_REQUEST_CODE_LIMIT=3
+ADMIN_REQUEST_CODE_WINDOW_MINUTES=5
 LOGIN_CODE_TTL_MINUTES=10
+ADMIN_AUDIT_LOG_LIMIT=200
 ```
+
+## Example deployment pattern
+
+推荐把 `joedeng.net` 继续公开部署在 Vercel，而 `/admin*` 再放在如下第一层身份保护之后：
+
+- **Cloudflare Access**：将 Google 登录邮箱断言写入 `cf-access-authenticated-user-email`
+- **Google IAP / 其他可信代理**：将登录邮箱写入 `x-goog-authenticated-user-email` 或 `x-auth-request-email`
+- **固定办公网 / 家庭网络**：利用 Vercel / 代理传入的 IP / country 头
+- **固定设备**：由受控浏览器或代理注入 `admin_device` cookie 或 `x-admin-device-token`
 
 ## Content model
 
@@ -62,11 +103,12 @@ LOGIN_CODE_TTL_MINUTES=10
 
 ## Admin flow
 
-1. 在 `/admin` 输入授权邮箱。
-2. 系统通过 Resend 发送验证码。
-3. 验证成功后拿到 session token。
-4. Admin 保存内容时调用 `PUT /api/content`。
-5. 内容最终写入 Vercel KV，而不是本地 JSON 文件。
+1. 访问 `/admin` 时先通过 gateway allowlist。
+2. 在 `/admin` 输入授权邮箱。
+3. 系统通过 Resend 发送验证码。
+4. 验证成功后拿到仅限 `/admin` 路径的 session cookie。
+5. Admin 保存内容时调用 `PUT /admin/api/content`。
+6. 审计日志写入 KV；异常行为可触发告警邮件。
 
 ## Notes
 

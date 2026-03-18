@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyEmailCode } from '@/lib/admin-auth';
+import { ADMIN_SESSION_COOKIE, getAdminSessionCookieOptions, verifyEmailCode } from '@/lib/admin-auth';
 
 export async function POST(request: NextRequest) {
   const body = await request.json();
@@ -15,5 +15,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Invalid or expired verification code.' }, { status: 401 });
   }
 
-  return NextResponse.json({ sessionToken });
+  const response = NextResponse.json({ message: 'Verified.' });
+  response.cookies.set(ADMIN_SESSION_COOKIE, sessionToken, getAdminSessionCookieOptions());
+  return response;
 }

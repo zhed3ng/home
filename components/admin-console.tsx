@@ -2,12 +2,19 @@
 
 import { useState } from 'react';
 
-export function AdminConsole({ initialContent }: { initialContent: string }) {
-  const [email, setEmail] = useState('');
+export function AdminConsole({
+  adminEmail,
+  initialContent,
+}: {
+  adminEmail: string | null;
+  initialContent: string;
+}) {
+  const [email, setEmail] = useState(adminEmail || '');
   const [code, setCode] = useState('');
   const [editor, setEditor] = useState(initialContent);
-  const [sessionToken, setSessionToken] = useState('');
   const [status, setStatus] = useState<{ text: string; error?: boolean }>({ text: '' });
+
+  const isAuthenticated = Boolean(adminEmail);
 
   async function requestCode() {
     setStatus({ text: 'Sending verification code...' });
@@ -32,8 +39,20 @@ export function AdminConsole({ initialContent }: { initialContent: string }) {
       setStatus({ text: data.error || 'Verification failed', error: true });
       return;
     }
-    setSessionToken(data.sessionToken);
-    setStatus({ text: 'Verified. You can save content now.' });
+    setStatus({ text: 'Verified. Reloading secure workspace...' });
+    window.location.reload();
+  }
+
+  async function logout() {
+    setStatus({ text: 'Signing out...' });
+    const res = await fetch('/api/admin/logout', { method: 'POST' });
+    const data = await res.json();
+    if (!res.ok) {
+      setStatus({ text: data.error || 'Sign out failed', error: true });
+      return;
+    }
+    setStatus({ text: 'Signed out.' });
+    window.location.reload();
   }
 
   async function reloadContent() {
@@ -61,7 +80,6 @@ export function AdminConsole({ initialContent }: { initialContent: string }) {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
-        'X-Admin-Token': sessionToken,
       },
       body: JSON.stringify(parsed),
     });
@@ -76,8 +94,8 @@ export function AdminConsole({ initialContent }: { initialContent: string }) {
           <div className="eyebrow">Admin Console</div>
           <h1>Formal editorial workspace</h1>
           <p>
-            This admin page is now designed for a production-style workflow on Next.js + Vercel. It authenticates by email code,
-            edits structured JSON, and saves content into managed storage instead of a local file.
+            Only a verified admin session can load or edit the site content. Sign in with your allowed email first, then the
+            secure editor will appear.
           </p>
         </div>
         <a className="btn" href="/">
@@ -85,30 +103,44 @@ export function AdminConsole({ initialContent }: { initialContent: string }) {
         </a>
       </section>
 
-      <section className="admin-card">
-        <div className="admin-grid">
-          <div className="field">
-            <label htmlFor="admin-email">Admin email</label>
-            <input id="admin-email" className="input" value={email} onChange={(e) => setEmail(e.target.value)} />
+      {!isAuthenticated ? (
+        <section className="admin-card">
+          <div className="admin-grid">
+            <div className="field">
+              <label htmlFor="admin-email">Admin email</label>
+              <input id="admin-email" className="input" value={email} onChange={(e) => setEmail(e.target.value)} />
+            </div>
+            <div className="field">
+              <label htmlFor="admin-code">Verification code</label>
+              <input id="admin-code" className="input" value={code} onChange={(e) => setCode(e.target.value)} />
+            </div>
           </div>
-          <div className="field">
-            <label htmlFor="admin-code">Verification code</label>
-            <input id="admin-code" className="input" value={code} onChange={(e) => setCode(e.target.value)} />
+          <div className="action-row" style={{ marginTop: 16 }}>
+            <button className="btn" onClick={requestCode}>Send code</button>
+            <button className="btn btn-primary" onClick={verifyCode}>Verify & open editor</button>
           </div>
-        </div>
-        <div className="action-row" style={{ marginTop: 16 }}>
-          <button className="btn" onClick={requestCode}>Send code</button>
-          <button className="btn" onClick={verifyCode}>Verify</button>
-          <button className="btn" onClick={reloadContent}>Reload</button>
-          <button className="btn btn-primary" onClick={saveContent}>Save</button>
-        </div>
-        <p className={status.error ? 'status-error' : 'status-ok'}>{status.text}</p>
-      </section>
+          <p className={status.error ? 'status-error' : 'status-ok'}>{status.text || 'Not signed in.'}</p>
+        </section>
+      ) : (
+        <>
+          <section className="admin-card">
+            <div className="action-row" style={{ justifyContent: 'space-between', marginBottom: 16 }}>
+              <p className="status-ok" style={{ margin: 0 }}>Signed in as {adminEmail}</p>
+              <button className="btn" onClick={logout}>Sign out</button>
+            </div>
+            <div className="action-row">
+              <button className="btn" onClick={reloadContent}>Reload</button>
+              <button className="btn btn-primary" onClick={saveContent}>Save</button>
+            </div>
+            <p className={status.error ? 'status-error' : 'status-ok'}>{status.text || 'Authenticated.'}</p>
+          </section>
 
-      <section className="admin-card">
-        <div className="eyebrow">Content JSON</div>
-        <textarea className="textarea editor" value={editor} onChange={(e) => setEditor(e.target.value)} />
-      </section>
+          <section className="admin-card">
+            <div className="eyebrow">Content JSON</div>
+            <textarea className="textarea editor" value={editor} onChange={(e) => setEditor(e.target.value)} />
+          </section>
+        </>
+      )}
     </div>
   );
 }

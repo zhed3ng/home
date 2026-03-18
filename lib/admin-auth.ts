@@ -5,7 +5,7 @@ import { storageDel, storageGet, storageSet } from '@/lib/storage';
 
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL?.trim().toLowerCase() || 'zhe.joe.deng@gmail.com';
 const LOGIN_CODE_TTL_MINUTES = Number(process.env.LOGIN_CODE_TTL_MINUTES || 10);
-const SESSION_TTL_SECONDS = 60 * 60 * 8;
+const SESSION_TTL_SECONDS = Number(process.env.ADMIN_SESSION_TTL_SECONDS || 60 * 60 * 2);
 export const ADMIN_SESSION_COOKIE = 'admin_session';
 
 function codeKey(email: string) {
@@ -66,7 +66,7 @@ export function getAdminSessionCookieOptions() {
     httpOnly: true,
     sameSite: 'lax' as const,
     secure: process.env.NODE_ENV === 'production',
-    path: '/',
+    path: '/admin',
     maxAge: SESSION_TTL_SECONDS,
   };
 }

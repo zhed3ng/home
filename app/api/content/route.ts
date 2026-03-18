@@ -1,16 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { saveSiteContent, getSiteContent, siteContentSchema } from '@/lib/content';
-import { validateAdminSession } from '@/lib/admin-auth';
+import { getAdminTokenFromRequest, validateAdminSession } from '@/lib/admin-auth';
 
-export async function GET() {
+async function requireAdmin(request: NextRequest) {
+  const token = getAdminTokenFromRequest(request);
+  return validateAdminSession(token);
+}
+
+export async function GET(request: NextRequest) {
+  const adminEmail = await requireAdmin(request);
+  if (!adminEmail) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   const content = await getSiteContent();
   return NextResponse.json(content);
 }
 
 export async function PUT(request: NextRequest) {
-  const token = request.headers.get('x-admin-token') || '';
-  const valid = await validateAdminSession(token);
-  if (!valid) {
+  const adminEmail = await requireAdmin(request);
+  if (!adminEmail) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -21,5 +30,5 @@ export async function PUT(request: NextRequest) {
   }
 
   const content = await saveSiteContent(parsed.data);
-  return NextResponse.json({ ...content, message: 'Saved to Vercel KV.' });
+  return NextResponse.json({ ...content, message: `Saved to Vercel KV for ${adminEmail}.` });
 }

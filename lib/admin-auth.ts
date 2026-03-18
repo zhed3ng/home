@@ -1,9 +1,12 @@
 import crypto from 'node:crypto';
+import { cookies } from 'next/headers';
+import { NextRequest } from 'next/server';
 import { storageDel, storageGet, storageSet } from '@/lib/storage';
 
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL?.trim().toLowerCase() || 'zhe.joe.deng@gmail.com';
 const LOGIN_CODE_TTL_MINUTES = Number(process.env.LOGIN_CODE_TTL_MINUTES || 10);
 const SESSION_TTL_SECONDS = 60 * 60 * 8;
+export const ADMIN_SESSION_COOKIE = 'admin_session';
 
 function codeKey(email: string) {
   return `admin:code:${email}`;
@@ -39,7 +42,31 @@ export async function verifyEmailCode(email: string, code: string) {
 }
 
 export async function validateAdminSession(token: string) {
-  if (!token) return false;
+  if (!token) return null;
   const value = await storageGet<string>(sessionKey(token));
-  return Boolean(value);
+  return value || null;
+}
+
+export function getAdminTokenFromRequest(request: NextRequest) {
+  return request.cookies.get(ADMIN_SESSION_COOKIE)?.value || request.headers.get('x-admin-token') || '';
+}
+
+export async function getAdminTokenFromCookies() {
+  const cookieStore = await cookies();
+  return cookieStore.get(ADMIN_SESSION_COOKIE)?.value || '';
+}
+
+export async function clearAdminSession(token: string) {
+  if (!token) return;
+  await storageDel(sessionKey(token));
+}
+
+export function getAdminSessionCookieOptions() {
+  return {
+    httpOnly: true,
+    sameSite: 'lax' as const,
+    secure: process.env.NODE_ENV === 'production',
+    path: '/',
+    maxAge: SESSION_TTL_SECONDS,
+  };
 }

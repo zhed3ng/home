@@ -4,7 +4,7 @@ set -euo pipefail
 # Scan source files for unresolved git conflict markers.
 # Intentionally skip README to avoid matching documentation examples.
 
-paths=(public server data index.html backend_app.py)
+paths=(app components lib scripts public)
 
 if rg -n "^(<<<<<<< |=======|>>>>>>> )" "${paths[@]}"; then
   echo "\n❌ Unresolved merge conflict markers found."

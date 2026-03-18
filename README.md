@@ -71,4 +71,4 @@ LOGIN_CODE_TTL_MINUTES=10
 ## Notes
 
 - `public/` 继续保留图片与 PDF 等静态资源。
-- 旧的 Python / 静态页面文件目前仍保留在仓库里，便于回滚或迁移对照；生产入口已改为 Next.js。
+- 仓库中的旧版 Python / 静态页面实现已移除，生产入口仅保留 Next.js。

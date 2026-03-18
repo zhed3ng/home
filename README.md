@@ -1,146 +1,74 @@
-# Personal Academic Website (Standardized, Lightweight)
+# Zhe (Joe) Deng Website — Next.js / Vercel Full Stack
 
-这个版本保持**轻量**，但采用了更“商业网站风格”的标准目录组织：
+这个版本已经从原来的 Python + 静态 HTML 结构，升级为 **Next.js App Router + Vercel 全栈架构**：
 
-```text
-.
-├── public/
-│   ├── index.html
-│   ├── admin.html
-│   └── assets/
-│       ├── css/site.css
-│       └── js/{site.js,admin.js}
-├── server/
-│   └── backend_app.py
-├── data/
-│   └── content.json
-└── backend_app.py   # 启动入口（兼容）
-```
+- 官网内容页继续保持简洁。
+- Admin 页面改成更正式的生产化后台。
+- AskJoe 直接走服务端 AI route。
+- 内容数据不再依赖本地 `content.json`。
+- 内容与后台会话/验证码统一迁移到 **Vercel KV** 托管存储。
 
-## Features
+## Stack
 
-- 单页官网（完整学术内容）
-- 后端 API 管理内容（当前管理 News）
-- Admin Console 在线编辑 `content.json`
-- 前端样式与脚本分离，便于维护与扩展
+- **Framework:** Next.js 15 (App Router)
+- **Hosting:** Vercel
+- **Content storage:** Vercel KV
+- **Admin email delivery:** Resend
+- **AI route:** OpenAI Responses API
 
-## Run locally
+## Local development
 
 ```bash
-export ADMIN_TOKEN=your_token_here
-python backend_app.py
+npm install
+npm run dev
 ```
 
-Open:
-- Site: http://127.0.0.1:8000/
-- Admin: http://127.0.0.1:8000/admin
+默认访问：
 
+- `/`：主页
+- `/admin`：Admin Console
+- `/api/content`：读取/保存站点内容
+- `/api/ask-joe`：AskJoe AI route
 
-
-## Admin email verification (新增)
-
-现在 Admin 支持“邮箱验证码登录”流程：
-
-1. 在 `/admin` 输入邮箱并点击 **Send Code**
-2. 后端向授权邮箱发送 6 位验证码
-3. 输入验证码点击 **Verify**，前端拿到 session token
-4. 保存内容时会自动使用该 token 调用 `PUT /api/content`
-
-默认只允许邮箱：`zhe.joe.deng@gmail.com`（可通过环境变量改）。
-
-### Required env vars for email sending
+## Required environment variables
 
 ```bash
-export ADMIN_EMAIL=zhe.joe.deng@gmail.com
-export SMTP_HOST=smtp.gmail.com
-export SMTP_PORT=587
-export SMTP_USERNAME=your_smtp_username
-export SMTP_PASSWORD=your_smtp_password
-export SMTP_USE_TLS=true
-export MAIL_FROM=your_smtp_username
+KV_URL=...
+KV_REST_API_URL=...
+KV_REST_API_TOKEN=...
+KV_REST_API_READ_ONLY_TOKEN=...
+ADMIN_EMAIL=zhe.joe.deng@gmail.com
+RESEND_API_KEY=...
+MAIL_FROM=admin@your-domain.com
+OPENAI_API_KEY=...
+ASK_JOE_MODEL=gpt-4.1-mini
 ```
 
 可选：
 
 ```bash
-export LOGIN_CODE_TTL_MINUTES=10
+LOGIN_CODE_TTL_MINUTES=10
 ```
 
-## API
+## Content model
 
-- `GET /api/health` → health check
-- `GET /api/content` → read content
-- `PUT /api/content` → update content (header: `X-Admin-Token`)
+当前内容由 `Vercel KV` 中的 `site:content` 键保存，结构包括：
 
-Example:
+- `hero`
+- `askJoe`
+- `news`
 
-```bash
-curl -X PUT http://127.0.0.1:8000/api/content \
-  -H 'Content-Type: application/json' \
-  -H 'X-Admin-Token: your_token_here' \
-  -d '{"news":[{"date":"2026 · Update","text":"New item"}]}'
-```
+首次启动时如果 KV 里没有内容，会自动写入默认内容。
 
-## Why this structure
+## Admin flow
 
-相比把所有内容塞在单文件里，这个结构更清晰；
-相比完整前端工程（React/Vite + 很多目录），这个结构更轻，适合个人主页长期维护。
+1. 在 `/admin` 输入授权邮箱。
+2. 系统通过 Resend 发送验证码。
+3. 验证成功后拿到 session token。
+4. Admin 保存内容时调用 `PUT /api/content`。
+5. 内容最终写入 Vercel KV，而不是本地 JSON 文件。
 
+## Notes
 
-## PR 冲突（GitHub 显示 *This branch has conflicts*）怎么处理
-
-如果页面提示冲突文件是 `README.md`、`backend_app.py`、`index.html`，按下面做：
-
-```bash
-# 1) 先同步远端
-git fetch origin
-
-# 2) 切到你的 PR 分支
-git checkout <your-pr-branch>
-
-# 3A) 推荐：rebase 到目标分支（例如 main）
-git rebase origin/main
-# 或 3B) merge 也可以
-# git merge origin/main
-
-# 4) 逐个解决冲突文件（删掉 <<<<<<< ======= >>>>>>> 标记）
-# 5) 标记已解决
-git add README.md backend_app.py index.html
-
-# 6A) rebase 流程继续
-# git rebase --continue
-# 6B) merge 流程提交
-# git commit
-
-# 7) 推送分支
-# rebase 后要 --force-with-lease
-git push --force-with-lease origin <your-pr-branch>
-# merge 流程则普通 push
-# git push origin <your-pr-branch>
-```
-
-### 冲突选择建议（针对本仓库）
-- `backend_app.py`：保留根入口转发到 `server/backend_app.py` 的版本。
-- `index.html`：保留根目录兼容页（redirect 到 `/`），主页面内容维护在 `public/index.html`。
-- `README.md`：保留“public/server/data”目录结构说明，再补充你这次改动说明。
-
-
-## Compatibility Routes
-
-- `/index.html` 与 `/public/index.html` 都会映射到首页，避免历史链接 404。
-- `/admin`、`/admin/`、`/admin.html` 都会映射到后台页。
-
-
-## Conflict Guard (防止把冲突标记上线)
-
-新增了自动检查脚本与 CI：
-
-- 本地检查：
-
-```bash
-./scripts/check_conflict_markers.sh
-```
-
-- GitHub Actions 会在 push / PR 时自动执行同样检查（`.github/workflows/conflict-guard.yml`）。
-
-这样如果代码里残留 `<<<<<<<` / `=======` / `>>>>>>>`，CI 会直接失败，避免再次上线异常首页。
+- `public/` 继续保留图片与 PDF 等静态资源。
+- 旧的 Python / 静态页面文件目前仍保留在仓库里，便于回滚或迁移对照；生产入口已改为 Next.js。

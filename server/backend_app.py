@@ -3,11 +3,9 @@ from __future__ import annotations
 import json
 import os
 import secrets
-import smtplib
 from http import HTTPStatus
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from email.message import EmailMessage
 from datetime import datetime, timedelta, timezone
 from urllib.parse import urlparse
 
@@ -16,17 +14,10 @@ PUBLIC_DIR = ROOT_DIR / "public"
 DATA_DIR = ROOT_DIR / "data"
 CONTENT_PATH = DATA_DIR / "content.json"
 ADMIN_TOKEN = os.getenv("ADMIN_TOKEN", "change-me")
-ADMIN_EMAIL = os.getenv("ADMIN_EMAIL", "zhe.joe.deng@gmail.com").strip().lower()
-SMTP_HOST = os.getenv("SMTP_HOST", "")
-SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))
-SMTP_USERNAME = os.getenv("SMTP_USERNAME", "")
-SMTP_PASSWORD = os.getenv("SMTP_PASSWORD", "")
-SMTP_USE_TLS = os.getenv("SMTP_USE_TLS", "true").lower() != "false"
-MAIL_FROM = os.getenv("MAIL_FROM", SMTP_USERNAME or "no-reply@example.com")
-LOGIN_CODE_TTL_MINUTES = int(os.getenv("LOGIN_CODE_TTL_MINUTES", "10"))
+ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", ADMIN_TOKEN)
+ADMIN_SESSION_HOURS = int(os.getenv("ADMIN_SESSION_HOURS", "12"))
 PORT = int(os.getenv("PORT", "8000"))
 
-pending_login_codes: dict[str, dict[str, object]] = {}
 active_admin_tokens: dict[str, datetime] = {}
 
 ROUTES = {
@@ -109,34 +100,8 @@ def _is_valid_session_token(token: str) -> bool:
 
 def _issue_session_token() -> str:
     token = secrets.token_urlsafe(32)
-    active_admin_tokens[token] = datetime.now(timezone.utc) + timedelta(hours=8)
+    active_admin_tokens[token] = datetime.now(timezone.utc) + timedelta(hours=ADMIN_SESSION_HOURS)
     return token
-
-
-def _send_verification_email(email: str, code: str) -> tuple[bool, str]:
-    if not SMTP_HOST:
-        return False, "SMTP_HOST is not configured"
-
-    msg = EmailMessage()
-    msg["Subject"] = "Your admin verification code"
-    msg["From"] = MAIL_FROM
-    msg["To"] = email
-    msg.set_content(
-        f"Your admin verification code is: {code}\n\n"
-        f"This code will expire in {LOGIN_CODE_TTL_MINUTES} minutes."
-    )
-
-    try:
-        with smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=15) as server:
-            if SMTP_USE_TLS:
-                server.starttls()
-            if SMTP_USERNAME and SMTP_PASSWORD:
-                server.login(SMTP_USERNAME, SMTP_PASSWORD)
-            server.send_message(msg)
-    except Exception as exc:
-        return False, str(exc)
-
-    return True, ""
 
 
 class RequestHandler(SimpleHTTPRequestHandler):
@@ -185,35 +150,7 @@ class RequestHandler(SimpleHTTPRequestHandler):
     def do_POST(self):
         path = urlparse(self.path).path
 
-        if path == "/api/admin/request-code":
-            try:
-                payload = self._parse_json_body()
-            except Exception:
-                self._send_json(HTTPStatus.BAD_REQUEST, {"error": "invalid JSON payload"})
-                return
-
-            email = str(payload.get("email", "")).strip().lower() if isinstance(payload, dict) else ""
-            if not email:
-                self._send_json(HTTPStatus.BAD_REQUEST, {"error": "email is required"})
-                return
-
-            if email != ADMIN_EMAIL:
-                self._send_json(HTTPStatus.FORBIDDEN, {"error": "email is not allowed"})
-                return
-
-            code = f"{secrets.randbelow(1000000):06d}"
-            expires_at = datetime.now(timezone.utc) + timedelta(minutes=LOGIN_CODE_TTL_MINUTES)
-            pending_login_codes[email] = {"code": code, "expires_at": expires_at}
-
-            ok, err = _send_verification_email(email, code)
-            if not ok:
-                self._send_json(HTTPStatus.INTERNAL_SERVER_ERROR, {"error": f"failed to send email: {err}"})
-                return
-
-            self._send_json(HTTPStatus.OK, {"ok": True})
-            return
-
-        if path == "/api/admin/verify-code":
+        if path == "/api/admin/login":
             try:
                 payload = self._parse_json_body()
             except Exception:
@@ -224,24 +161,15 @@ class RequestHandler(SimpleHTTPRequestHandler):
                 self._send_json(HTTPStatus.BAD_REQUEST, {"error": "payload must be an object"})
                 return
 
-            email = str(payload.get("email", "")).strip().lower()
-            code = str(payload.get("code", "")).strip()
-
-            record = pending_login_codes.get(email)
-            if not record:
-                self._send_json(HTTPStatus.UNAUTHORIZED, {"error": "invalid or expired code"})
+            password = str(payload.get("password", "")).strip()
+            if not password:
+                self._send_json(HTTPStatus.BAD_REQUEST, {"error": "password is required"})
                 return
 
-            if datetime.now(timezone.utc) > record["expires_at"]:
-                del pending_login_codes[email]
-                self._send_json(HTTPStatus.UNAUTHORIZED, {"error": "invalid or expired code"})
+            if password != ADMIN_PASSWORD:
+                self._send_json(HTTPStatus.UNAUTHORIZED, {"error": "invalid password"})
                 return
 
-            if code != record["code"]:
-                self._send_json(HTTPStatus.UNAUTHORIZED, {"error": "invalid or expired code"})
-                return
-
-            del pending_login_codes[email]
             session_token = _issue_session_token()
             self._send_json(HTTPStatus.OK, {"ok": True, "sessionToken": session_token})
             return

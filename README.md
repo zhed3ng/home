@@ -28,6 +28,7 @@
 
 ```bash
 export ADMIN_TOKEN=your_token_here
+export ADMIN_PASSWORD=choose_a_long_random_password
 python backend_app.py
 ```
 
@@ -37,39 +38,37 @@ Open:
 
 
 
-## Admin email verification (新增)
+## Admin login（推荐简化方案）
 
-现在 Admin 支持“邮箱验证码登录”流程：
+因为这个网站本质上是公开个人网站，且只有你一个管理员，所以这里采用更简单、维护成本更低的后台登录方式：
 
-1. 在 `/admin` 输入邮箱并点击 **Send Code**
-2. 后端向授权邮箱发送 6 位验证码
-3. 输入验证码点击 **Verify**，前端拿到 session token
-4. 保存内容时会自动使用该 token 调用 `PUT /api/content`
+1. 在 `/admin` 输入管理员密码并点击 **Log In**
+2. 后端校验密码后返回一个临时 session token
+3. 浏览器把这个 token 保存在 `sessionStorage`
+4. 之后保存内容时自动带上该 token 调用 `PUT /api/content`
 
-默认只允许邮箱：`zhe.joe.deng@gmail.com`（可通过环境变量改）。
+这样做的好处：
 
-### Required env vars for email sending
+- 不需要 SMTP / 邮箱发信配置
+- 部署更简单，失败点更少
+- 更符合“只有你自己登录后台”的使用场景
+- 仍然不会把真正的管理密码直接暴露在前端代码里
 
 ```bash
-export ADMIN_EMAIL=zhe.joe.deng@gmail.com
-export SMTP_HOST=smtp.gmail.com
-export SMTP_PORT=587
-export SMTP_USERNAME=your_smtp_username
-export SMTP_PASSWORD=your_smtp_password
-export SMTP_USE_TLS=true
-export MAIL_FROM=your_smtp_username
+export ADMIN_PASSWORD=choose_a_long_random_password
 ```
 
 可选：
 
 ```bash
-export LOGIN_CODE_TTL_MINUTES=10
+export ADMIN_SESSION_HOURS=12
 ```
 
 ## API
 
 - `GET /api/health` → health check
 - `GET /api/content` → read content
+- `POST /api/admin/login` → create admin session token
 - `PUT /api/content` → update content (header: `X-Admin-Token`)
 
 Example:

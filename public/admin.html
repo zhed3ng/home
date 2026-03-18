@@ -25,22 +25,13 @@
   <main class="admin-shell">
     <section class="admin-card">
       <h1>Content Admin</h1>
-      <p class="meta">请先用授权邮箱获取验证码，验证后才可以保存内容。</p>
+      <p class="meta">这是公开个人网站的后台。你只需要输入管理员密码登录，登录后当前浏览器会保存临时会话，再进行内容编辑和保存。</p>
 
-      <div class="admin-grid">
-        <div>
-          <label for="email">Admin Email</label>
-          <input class="admin-input" id="email" type="email" placeholder="zhe.joe.deng@gmail.com" />
-        </div>
-        <div>
-          <label for="code">Verification Code</label>
-          <input class="admin-input" id="code" type="text" placeholder="6-digit code" />
-        </div>
-      </div>
+      <label for="password">Admin Password</label>
+      <input class="admin-input" id="password" type="password" placeholder="Enter admin password" />
 
       <div class="admin-actions">
-        <button class="btn" id="requestCodeBtn">Send Code</button>
-        <button class="btn" id="verifyCodeBtn">Verify</button>
+        <button class="btn" id="loginBtn">Log In</button>
         <button class="btn" id="loadBtn">Load</button>
         <button class="btn btn-primary" id="saveBtn">Save</button>
       </div>

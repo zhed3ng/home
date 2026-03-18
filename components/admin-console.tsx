@@ -122,8 +122,7 @@ export function AdminConsole({
           <div className="eyebrow">Admin Console</div>
           <h1>Formal editorial workspace</h1>
           <p>
-            This admin workspace is protected by a gateway allowlist first, then by an email-code second factor. Only an
-            approved Google identity, device token, country, or IP can reach the verification step.
+            This admin workspace always requires the email-code second factor. If you configure gateway allowlist variables, only approved Google identities, device tokens, countries, or IPs can reach the verification step.
           </p>
         </div>
         <Link className="btn" href="/">
@@ -147,7 +146,7 @@ export function AdminConsole({
             <button className="btn" onClick={requestCode}>Send code</button>
             <button className="btn btn-primary" onClick={verifyCode}>Verify & open editor</button>
           </div>
-          <p className={status.error ? 'status-error' : 'status-ok'}>{status.text || 'Gateway cleared. Not signed in.'}</p>
+          <p className={status.error ? 'status-error' : 'status-ok'}>{status.text || 'Not signed in yet. If gateway rules are configured, they have already been checked.'}</p>
         </section>
       ) : (
         <>

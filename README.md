@@ -26,7 +26,7 @@ npm run dev
 默认访问：
 
 - `/`：主页
-- `/admin`：Admin Console（需要先通过 gateway allowlist）
+- `/admin`：Admin Console（默认可访问；配置 gateway allowlist 后会先经过第一层保护）
 - `/admin/api/content`：读取/保存站点内容
 - `/api/ask-joe`：AskJoe AI route
 
@@ -34,7 +34,7 @@ npm run dev
 
 Admin 现在采用“更强版本”的四层保护：
 
-1. `/admin*` 和 `/admin/api/*` 先经过 gateway allowlist。
+1. 当你配置了 gateway 相关环境变量后，`/admin*` 和 `/admin/api/*` 才会先经过 gateway allowlist；未配置时不会锁死后台入口。
 2. gateway 支持以下任一条件通过：
    - 允许的 Google 身份头（如 Cloudflare Access / Google IAP 注入）
    - 固定设备 token
@@ -103,7 +103,7 @@ ADMIN_AUDIT_LOG_LIMIT=200
 
 ## Admin flow
 
-1. 访问 `/admin` 时先通过 gateway allowlist。
+1. 访问 `/admin`。如果配置了 gateway allowlist，先通过第一层检查；如果没配置，则直接进入后台登录页。
 2. 在 `/admin` 输入授权邮箱。
 3. 系统通过 Resend 发送验证码。
 4. 验证成功后拿到仅限 `/admin` 路径的 session cookie。

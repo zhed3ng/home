@@ -9,6 +9,10 @@ function listFromCsv(value?: string) {
   );
 }
 
+function hasEntries(values: Set<string>) {
+  return values.size > 0;
+}
+
 export function getRequestIp(request: NextRequest) {
   const forwarded = request.headers.get('x-forwarded-for') || '';
   return forwarded.split(',')[0]?.trim() || request.headers.get('x-real-ip') || 'unknown';
@@ -46,6 +50,22 @@ export function getGatewayIdentity(request: NextRequest) {
   return { googleEmail, ip, country, deviceToken };
 }
 
+export function hasGatewayRestrictionsConfigured() {
+  const allowedGoogleEmails = listFromCsv(process.env.ADMIN_ALLOWED_GOOGLE_EMAILS);
+  const allowedIps = listFromCsv(process.env.ADMIN_ALLOWED_IPS);
+  const allowedCountries = listFromCsv(process.env.ADMIN_ALLOWED_COUNTRIES);
+  const allowedDeviceTokens = listFromCsv(process.env.ADMIN_ALLOWED_DEVICE_TOKENS);
+  const bypassSecret = process.env.ADMIN_GATEWAY_BYPASS_SECRET?.trim();
+
+  return (
+    hasEntries(allowedGoogleEmails) ||
+    hasEntries(allowedIps) ||
+    hasEntries(allowedCountries) ||
+    hasEntries(allowedDeviceTokens) ||
+    Boolean(bypassSecret)
+  );
+}
+
 export function isAllowedByGateway(request: NextRequest) {
   const allowedGoogleEmails = listFromCsv(process.env.ADMIN_ALLOWED_GOOGLE_EMAILS);
   const allowedIps = listFromCsv(process.env.ADMIN_ALLOWED_IPS);
@@ -55,6 +75,10 @@ export function isAllowedByGateway(request: NextRequest) {
   const providedSecret = request.headers.get('x-admin-gateway-secret')?.trim();
 
   const identity = getGatewayIdentity(request);
+
+  if (!hasGatewayRestrictionsConfigured()) {
+    return { allowed: true, reason: 'gateway-not-configured', identity };
+  }
 
   if (bypassSecret && providedSecret && bypassSecret === providedSecret) {
     return { allowed: true, reason: 'gateway-secret', identity };

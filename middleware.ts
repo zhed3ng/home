@@ -1,8 +1,12 @@
 import { NextResponse, type NextRequest } from 'next/server';
-import { isAllowedByGateway } from '@/lib/admin-gateway';
+import { hasGatewayRestrictionsConfigured, isAllowedByGateway } from '@/lib/admin-gateway';
 
 export function middleware(request: NextRequest) {
   if (!request.nextUrl.pathname.startsWith('/admin')) {
+    return NextResponse.next();
+  }
+
+  if (!hasGatewayRestrictionsConfigured()) {
     return NextResponse.next();
   }
 

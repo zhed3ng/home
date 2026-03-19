@@ -25,7 +25,13 @@ export default async function HomePage() {
   return (
     <main className="page-shell">
       <header className="topbar">
-        <div className="brand"><div className="brand-badge">ZD</div>{content.hero.name}</div>
+        <a className="brand" href="#top">
+          <div className="brand-badge">ZD</div>
+          <div>
+            <div className="brand-name">{content.hero.name}</div>
+            <div className="brand-subtitle">Academic profile</div>
+          </div>
+        </a>
         <nav className="nav">
           <a href="#askjoe">AskJoe</a>
           <a href="#news">News</a>
@@ -35,21 +41,54 @@ export default async function HomePage() {
         </nav>
       </header>
 
-      <section className="hero">
-        <div>
-          <Image src="/zhe-deng-sju-headshot-min.jpg" alt={content.hero.name} width={560} height={680} style={{ borderRadius: 20, objectFit: 'cover' }} priority />
-        </div>
-        <div>
+      <section className="hero" id="top">
+        <div className="hero-copy">
           <div className="eyebrow">Official Academic Website</div>
-          <h1>{content.hero.name}</h1>
-          <h2>{content.hero.title}</h2>
-          <p>{content.hero.subtitle}</p>
-          <div className="chip-row" style={{ margin: '20px 0' }}>
+          <div className="hero-title-row">
+            <div className="hero-avatar-shell" aria-hidden="true">
+              <Image
+                src="/zhe-deng-sju-headshot-min.jpg"
+                alt={content.hero.name}
+                width={84}
+                height={84}
+                className="hero-avatar"
+                priority
+              />
+            </div>
+            <div>
+              <h1>{content.hero.name}</h1>
+              <h2>{content.hero.title}</h2>
+            </div>
+          </div>
+          <p className="hero-summary">{content.hero.subtitle}</p>
+          <div className="chip-row hero-chip-row">
             {profile.chips.map((chip) => <span key={chip} className="chip">{chip}</span>)}
           </div>
           <div className="action-row">
             <a className="btn btn-primary" href={content.hero.cvUrl} target="_blank" rel="noreferrer">Download CV</a>
             <a className="btn" href={`mailto:${content.hero.email}`}>Email / Contact</a>
+          </div>
+        </div>
+
+        <div className="hero-spotlight panel-soft">
+          <div className="hero-spotlight-label">Overview</div>
+          <p>
+            Focused on rigorous, applied research at the intersection of information systems, analytics,
+            education, and healthcare — presented with a clean, lightweight interface inspired by Google-style minimalism.
+          </p>
+          <div className="spotlight-metrics">
+            <div>
+              <strong>{profile.research.length}</strong>
+              <span>Research themes</span>
+            </div>
+            <div>
+              <strong>{profile.teaching.length}</strong>
+              <span>Courses taught</span>
+            </div>
+            <div>
+              <strong>{profile.grants.length}</strong>
+              <span>Funding highlights</span>
+            </div>
           </div>
         </div>
       </section>

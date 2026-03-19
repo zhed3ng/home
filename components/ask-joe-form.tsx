@@ -37,7 +37,7 @@ export function AskJoeForm({ suggestedQuestions }: { suggestedQuestions: string[
     <form className="ask-box" onSubmit={handleSubmit}>
       <div className="chip-row">
         {suggestedQuestions.map((item) => (
-          <button key={item} type="button" className="chip" onClick={() => setQuestion(item)}>
+          <button key={item} type="button" className="chip chip-button" onClick={() => setQuestion(item)}>
             {item}
           </button>
         ))}
@@ -55,7 +55,7 @@ export function AskJoeForm({ suggestedQuestions }: { suggestedQuestions: string[
       </div>
       {error ? <div className="status-error">{error}</div> : null}
       {answer ? (
-        <div>
+        <div className="answer-block">
           <div className="eyebrow">Response</div>
           <div className="answer">{answer}</div>
         </div>

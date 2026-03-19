@@ -1,7 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
+import type { SiteContent } from '@/lib/content';
 
 type AuditEvent = {
   timestamp: string;
@@ -14,6 +15,18 @@ type AuditEvent = {
   detail?: string;
 };
 
+function parseInitialContent(initialContent: string): SiteContent {
+  if (!initialContent.trim()) {
+    return {
+      hero: { name: '', title: '', subtitle: '', email: '', cvUrl: '' },
+      askJoe: { intro: '', suggestedQuestions: [''] },
+      news: [],
+    };
+  }
+
+  return JSON.parse(initialContent) as SiteContent;
+}
+
 export function AdminConsole({
   adminEmail,
   initialContent,
@@ -25,11 +38,92 @@ export function AdminConsole({
 }) {
   const [email, setEmail] = useState(adminEmail || '');
   const [code, setCode] = useState('');
-  const [editor, setEditor] = useState(initialContent);
+  const [content, setContent] = useState<SiteContent>(() => parseInitialContent(initialContent));
   const [status, setStatus] = useState<{ text: string; error?: boolean }>({ text: '' });
   const [auditEvents, setAuditEvents] = useState(initialAuditEvents);
 
   const isAuthenticated = Boolean(adminEmail);
+  const editor = useMemo(() => JSON.stringify(content, null, 2), [content]);
+
+  function updateHero<K extends keyof SiteContent['hero']>(key: K, value: SiteContent['hero'][K]) {
+    setContent((current) => ({
+      ...current,
+      hero: {
+        ...current.hero,
+        [key]: value,
+      },
+    }));
+  }
+
+  function updateAskJoeIntro(value: string) {
+    setContent((current) => ({
+      ...current,
+      askJoe: {
+        ...current.askJoe,
+        intro: value,
+      },
+    }));
+  }
+
+  function updateSuggestedQuestion(index: number, value: string) {
+    setContent((current) => ({
+      ...current,
+      askJoe: {
+        ...current.askJoe,
+        suggestedQuestions: current.askJoe.suggestedQuestions.map((item, itemIndex) => (
+          itemIndex === index ? value : item
+        )),
+      },
+    }));
+  }
+
+  function addSuggestedQuestion() {
+    setContent((current) => ({
+      ...current,
+      askJoe: {
+        ...current.askJoe,
+        suggestedQuestions: [...current.askJoe.suggestedQuestions, ''],
+      },
+    }));
+  }
+
+  function removeSuggestedQuestion(index: number) {
+    setContent((current) => ({
+      ...current,
+      askJoe: {
+        ...current.askJoe,
+        suggestedQuestions: current.askJoe.suggestedQuestions.filter((_, itemIndex) => itemIndex !== index),
+      },
+    }));
+  }
+
+  function updateNews(index: number, key: 'date' | 'text', value: string) {
+    setContent((current) => ({
+      ...current,
+      news: current.news.map((item, itemIndex) => (
+        itemIndex === index
+          ? {
+              ...item,
+              [key]: value,
+            }
+          : item
+      )),
+    }));
+  }
+
+  function addNewsItem() {
+    setContent((current) => ({
+      ...current,
+      news: [...current.news, { date: '', text: '' }],
+    }));
+  }
+
+  function removeNewsItem(index: number) {
+    setContent((current) => ({
+      ...current,
+      news: current.news.filter((_, itemIndex) => itemIndex !== index),
+    }));
+  }
 
   async function requestCode() {
     setStatus({ text: 'Sending verification code...' });
@@ -78,10 +172,9 @@ export function AdminConsole({
       setStatus({ text: data.error || 'Load failed', error: true });
       return;
     }
-    setEditor(JSON.stringify(data, null, 2));
+    setContent(data as SiteContent);
     setStatus({ text: 'Loaded latest content.' });
   }
-
 
   async function reloadAuditLog() {
     setStatus({ text: 'Loading audit log...' });
@@ -96,20 +189,12 @@ export function AdminConsole({
   }
 
   async function saveContent() {
-    let parsed;
-    try {
-      parsed = JSON.parse(editor);
-    } catch (error) {
-      setStatus({ text: error instanceof Error ? error.message : 'Invalid JSON', error: true });
-      return;
-    }
-
     const res = await fetch('/admin/api/content', {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(parsed),
+      body: JSON.stringify(content),
     });
     const data = await res.json();
     setStatus({ text: data.message || (res.ok ? 'Content saved to KV storage.' : data.error), error: !res.ok });
@@ -120,9 +205,9 @@ export function AdminConsole({
       <section className="admin-card admin-hero">
         <div>
           <div className="eyebrow">Admin Console</div>
-          <h1>Formal editorial workspace</h1>
+          <h1>Simple content editor</h1>
           <p>
-            This admin workspace always requires the email-code second factor. If you configure gateway allowlist variables, only approved Google identities, device tokens, countries, or IPs can reach the verification step.
+            The easiest way to update your site is now to edit fields directly here, then save. The form still stores the same structured content in KV, but you no longer need to hand-edit raw JSON.
           </p>
         </div>
         <Link className="btn" href="/">
@@ -164,8 +249,108 @@ export function AdminConsole({
           </section>
 
           <section className="admin-card">
-            <div className="eyebrow">Content JSON</div>
-            <textarea className="textarea editor" value={editor} onChange={(e) => setEditor(e.target.value)} />
+            <div className="eyebrow">Website content</div>
+            <div className="admin-grid">
+              <div className="field">
+                <label htmlFor="hero-name">Name</label>
+                <input id="hero-name" className="input" value={content.hero.name} onChange={(e) => updateHero('name', e.target.value)} />
+              </div>
+              <div className="field">
+                <label htmlFor="hero-title">Title</label>
+                <input id="hero-title" className="input" value={content.hero.title} onChange={(e) => updateHero('title', e.target.value)} />
+              </div>
+              <div className="field">
+                <label htmlFor="hero-email">Email</label>
+                <input id="hero-email" className="input" value={content.hero.email} onChange={(e) => updateHero('email', e.target.value)} />
+              </div>
+              <div className="field">
+                <label htmlFor="hero-cv">CV URL</label>
+                <input id="hero-cv" className="input" value={content.hero.cvUrl} onChange={(e) => updateHero('cvUrl', e.target.value)} />
+              </div>
+            </div>
+            <div className="field" style={{ marginTop: 16 }}>
+              <label htmlFor="hero-subtitle">Subtitle</label>
+              <textarea id="hero-subtitle" className="textarea" value={content.hero.subtitle} onChange={(e) => updateHero('subtitle', e.target.value)} />
+            </div>
+          </section>
+
+          <section className="admin-card">
+            <div className="eyebrow">AskJoe</div>
+            <div className="field">
+              <label htmlFor="askjoe-intro">Intro text</label>
+              <textarea id="askjoe-intro" className="textarea" value={content.askJoe.intro} onChange={(e) => updateAskJoeIntro(e.target.value)} />
+            </div>
+            <div style={{ display: 'grid', gap: 12, marginTop: 16 }}>
+              {content.askJoe.suggestedQuestions.map((question, index) => (
+                <div key={`question-${index}`} className="field">
+                  <label htmlFor={`question-${index}`}>Suggested question {index + 1}</label>
+                  <div className="action-row">
+                    <input
+                      id={`question-${index}`}
+                      className="input"
+                      value={question}
+                      onChange={(e) => updateSuggestedQuestion(index, e.target.value)}
+                    />
+                    <button
+                      className="btn"
+                      type="button"
+                      onClick={() => removeSuggestedQuestion(index)}
+                      disabled={content.askJoe.suggestedQuestions.length === 1}
+                    >
+                      Remove
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="action-row" style={{ marginTop: 16 }}>
+              <button className="btn" type="button" onClick={addSuggestedQuestion}>Add question</button>
+            </div>
+          </section>
+
+          <section className="admin-card">
+            <div className="action-row" style={{ justifyContent: 'space-between', marginBottom: 16 }}>
+              <div>
+                <div className="eyebrow">News & updates</div>
+                <p style={{ margin: '8px 0 0' }}>Add or remove news items without touching code.</p>
+              </div>
+              <button className="btn" type="button" onClick={addNewsItem}>Add news item</button>
+            </div>
+            <div style={{ display: 'grid', gap: 16 }}>
+              {content.news.map((item, index) => (
+                <div key={`news-${index}`} style={{ border: '1px solid var(--line)', borderRadius: 16, padding: 16 }}>
+                  <div className="admin-grid">
+                    <div className="field">
+                      <label htmlFor={`news-date-${index}`}>Date / tag</label>
+                      <input
+                        id={`news-date-${index}`}
+                        className="input"
+                        value={item.date}
+                        onChange={(e) => updateNews(index, 'date', e.target.value)}
+                      />
+                    </div>
+                  </div>
+                  <div className="field" style={{ marginTop: 16 }}>
+                    <label htmlFor={`news-text-${index}`}>Content</label>
+                    <textarea
+                      id={`news-text-${index}`}
+                      className="textarea"
+                      value={item.text}
+                      onChange={(e) => updateNews(index, 'text', e.target.value)}
+                    />
+                  </div>
+                  <div className="action-row" style={{ marginTop: 16 }}>
+                    <button className="btn" type="button" onClick={() => removeNewsItem(index)}>Remove this item</button>
+                  </div>
+                </div>
+              ))}
+              {content.news.length === 0 ? <p style={{ margin: 0 }}>No news items yet. Click “Add news item” to create one.</p> : null}
+            </div>
+          </section>
+
+          <section className="admin-card">
+            <div className="eyebrow">Generated JSON preview</div>
+            <textarea className="textarea editor" value={editor} readOnly />
           </section>
 
           <section className="admin-card">

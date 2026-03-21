@@ -1,16 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { saveSiteContent, getSiteContent, siteContentSchema } from '@/lib/content';
-import { getAdminEmailFromRequest } from '@/lib/admin-auth';
+import { getAdminEmailForRequest } from '@/lib/admin-session';
 import { getRequestCountry, getRequestIp, getRequestUserAgent, isAllowedByGateway } from '@/lib/admin-gateway';
 import { appendAuditEvent } from '@/lib/admin-security';
 
 async function requireAdmin(request: NextRequest) {
   const gateway = isAllowedByGateway(request);
-  if (!gateway.allowed) {
-    return { adminEmail: null, gatewayReason: gateway.reason };
-  }
-
-  const adminEmail = getAdminEmailFromRequest(request);
+  const adminEmail = await getAdminEmailForRequest(request);
   return { adminEmail, gatewayReason: gateway.reason };
 }
 

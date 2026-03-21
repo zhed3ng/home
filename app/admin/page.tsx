@@ -1,11 +1,12 @@
 import { AdminConsole } from '@/components/admin-console';
 import { getSiteContent } from '@/lib/content';
-import { getAdminEmailFromHeaders, getAdminHost, getPublicSiteUrl } from '@/lib/admin-auth';
+import { getAdminHost, getPublicSiteUrl } from '@/lib/admin-auth';
+import { getAdminEmailForPage } from '@/lib/admin-session';
 import { storageGet } from '@/lib/storage';
 import type { AdminAuditEvent } from '@/lib/admin-security';
 
 export default async function AdminPage() {
-  const adminEmail = await getAdminEmailFromHeaders();
+  const adminEmail = await getAdminEmailForPage();
   const content = adminEmail ? await getSiteContent() : null;
   const auditEvents = adminEmail ? ((await storageGet<AdminAuditEvent[]>('admin:audit:events')) || []) : [];
 

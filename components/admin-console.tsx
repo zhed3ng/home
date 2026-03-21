@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import type { SiteContent } from '@/lib/content';
 
 type AuditEvent = {
@@ -39,9 +40,12 @@ export function AdminConsole({
   initialContent: string;
   initialAuditEvents: AuditEvent[];
 }) {
+  const router = useRouter();
   const [content, setContent] = useState<SiteContent>(() => parseInitialContent(initialContent));
   const [status, setStatus] = useState<{ text: string; error?: boolean }>({ text: '' });
   const [auditEvents, setAuditEvents] = useState(initialAuditEvents);
+  const [loginEmail, setLoginEmail] = useState(adminEmail || '');
+  const [verificationCode, setVerificationCode] = useState('');
 
   const isAuthenticated = Boolean(adminEmail);
   const editor = useMemo(() => JSON.stringify(content, null, 2), [content]);
@@ -127,6 +131,52 @@ export function AdminConsole({
     }));
   }
 
+
+  async function requestVerificationCode() {
+    const email = loginEmail.trim().toLowerCase();
+    if (!email) {
+      setStatus({ text: 'Please enter your admin email first.', error: true });
+      return;
+    }
+
+    const res = await fetch('/admin/api/request-code', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
+    });
+    const data = await res.json().catch(() => ({}));
+    setStatus({ text: data.message || data.error || (res.ok ? 'Verification code sent.' : 'Request failed.'), error: !res.ok });
+  }
+
+  async function verifyCode() {
+    const email = loginEmail.trim().toLowerCase();
+    const code = verificationCode.trim();
+    if (!email || !code) {
+      setStatus({ text: 'Please enter both email and verification code.', error: true });
+      return;
+    }
+
+    const res = await fetch('/admin/api/verify-code', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, code }),
+    });
+    const data = await res.json().catch(() => ({}));
+    setStatus({ text: data.message || data.error || (res.ok ? 'Signed in successfully.' : 'Verification failed.'), error: !res.ok });
+    if (res.ok) {
+      router.refresh();
+    }
+  }
+
+  async function logout() {
+    const res = await fetch('/admin/api/logout', { method: 'POST' });
+    const data = await res.json().catch(() => ({}));
+    setStatus({ text: data.message || (res.ok ? 'Signed out.' : 'Sign-out failed.'), error: !res.ok });
+    if (res.ok) {
+      router.refresh();
+    }
+  }
+
   async function reloadContent() {
     setStatus({ text: 'Loading latest content...' });
     const res = await fetch('/admin/api/content');
@@ -182,10 +232,22 @@ export function AdminConsole({
         <section className="admin-card">
           <div className="eyebrow">Access required</div>
           <p style={{ margin: '8px 0 0' }}>
-            Sign in through Cloudflare Access with your approved identity, then reload this page. Once Access forwards your email header to the app, the editor will unlock automatically.
+            If Cloudflare Access is enabled, sign in there first. Otherwise, request a one-time email code below to create the in-app admin session and unlock the editor.
           </p>
+          <div className="admin-grid" style={{ marginTop: 16 }}>
+            <div className="field">
+              <label htmlFor="admin-email">Admin email</label>
+              <input id="admin-email" className="input" value={loginEmail} onChange={(e) => setLoginEmail(e.target.value)} />
+            </div>
+            <div className="field">
+              <label htmlFor="admin-code">Verification code</label>
+              <input id="admin-code" className="input" value={verificationCode} onChange={(e) => setVerificationCode(e.target.value)} />
+            </div>
+          </div>
           <div className="action-row" style={{ marginTop: 16 }}>
-            <a className="btn btn-primary" href={accessLogoutUrl}>Open Cloudflare Access login</a>
+            <button className="btn" onClick={requestVerificationCode}>Send email code</button>
+            <button className="btn btn-primary" onClick={verifyCode}>Verify and sign in</button>
+            <a className="btn" href={accessLogoutUrl}>Cloudflare Access</a>
             <a className="btn" href={publicSiteUrl}>Return to public site</a>
           </div>
           <p className={status.error ? 'status-error' : 'status-ok'}>
@@ -198,9 +260,12 @@ export function AdminConsole({
             <div className="action-row" style={{ justifyContent: 'space-between', marginBottom: 16 }}>
               <div>
                 <p className="status-ok" style={{ margin: 0 }}>Signed in as {adminEmail}</p>
-                <p style={{ margin: '8px 0 0' }}>Access is controlled by Cloudflare Access on {adminHost}.</p>
+                <p style={{ margin: '8px 0 0' }}>Access is controlled by Cloudflare Access on {adminHost} when enabled, or by the built-in email verification flow when gateway protection is not configured.</p>
               </div>
-              <a className="btn" href={accessLogoutUrl}>End Access session</a>
+              <div className="action-row">
+                <button className="btn" onClick={logout}>Sign out</button>
+                <a className="btn" href={accessLogoutUrl}>End Access session</a>
+              </div>
             </div>
             <div className="action-row">
               <button className="btn" onClick={reloadContent}>Reload content</button>

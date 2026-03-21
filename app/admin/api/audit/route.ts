@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAdminTokenFromRequest, validateAdminSession } from '@/lib/admin-auth';
+import { getAdminEmailFromRequest } from '@/lib/admin-auth';
 import { isAllowedByGateway } from '@/lib/admin-gateway';
 import { storageGet } from '@/lib/storage';
 import type { AdminAuditEvent } from '@/lib/admin-security';
@@ -9,8 +9,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const token = getAdminTokenFromRequest(request);
-  const adminEmail = await validateAdminSession(token);
+  const adminEmail = getAdminEmailFromRequest(request);
   if (!adminEmail) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }

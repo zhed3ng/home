@@ -1,6 +1,5 @@
 'use client';
 
-import Link from 'next/link';
 import { useMemo, useState } from 'react';
 import type { SiteContent } from '@/lib/content';
 
@@ -29,21 +28,24 @@ function parseInitialContent(initialContent: string): SiteContent {
 
 export function AdminConsole({
   adminEmail,
+  adminHost,
+  publicSiteUrl,
   initialContent,
   initialAuditEvents,
 }: {
   adminEmail: string | null;
+  adminHost: string;
+  publicSiteUrl: string;
   initialContent: string;
   initialAuditEvents: AuditEvent[];
 }) {
-  const [email, setEmail] = useState(adminEmail || '');
-  const [code, setCode] = useState('');
   const [content, setContent] = useState<SiteContent>(() => parseInitialContent(initialContent));
   const [status, setStatus] = useState<{ text: string; error?: boolean }>({ text: '' });
   const [auditEvents, setAuditEvents] = useState(initialAuditEvents);
 
   const isAuthenticated = Boolean(adminEmail);
   const editor = useMemo(() => JSON.stringify(content, null, 2), [content]);
+  const accessLogoutUrl = `https://${adminHost}/cdn-cgi/access/logout`;
 
   function updateHero<K extends keyof SiteContent['hero']>(key: K, value: SiteContent['hero'][K]) {
     setContent((current) => ({
@@ -125,45 +127,6 @@ export function AdminConsole({
     }));
   }
 
-  async function requestCode() {
-    setStatus({ text: 'Sending verification code...' });
-    const res = await fetch('/admin/api/request-code', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email }),
-    });
-    const data = await res.json();
-    setStatus({ text: data.message || (res.ok ? 'Verification code sent.' : data.error), error: !res.ok });
-  }
-
-  async function verifyCode() {
-    setStatus({ text: 'Verifying code...' });
-    const res = await fetch('/admin/api/verify-code', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, code }),
-    });
-    const data = await res.json();
-    if (!res.ok) {
-      setStatus({ text: data.error || 'Verification failed', error: true });
-      return;
-    }
-    setStatus({ text: 'Verified. Reloading secure workspace...' });
-    window.location.reload();
-  }
-
-  async function logout() {
-    setStatus({ text: 'Signing out...' });
-    const res = await fetch('/admin/api/logout', { method: 'POST' });
-    const data = await res.json();
-    if (!res.ok) {
-      setStatus({ text: data.error || 'Sign out failed', error: true });
-      return;
-    }
-    setStatus({ text: 'Signed out.' });
-    window.location.reload();
-  }
-
   async function reloadContent() {
     setStatus({ text: 'Loading latest content...' });
     const res = await fetch('/admin/api/content');
@@ -207,45 +170,44 @@ export function AdminConsole({
           <div className="eyebrow">Admin Console</div>
           <h1>Simple content editor</h1>
           <p>
-            The easiest way to update your site is now to edit fields directly here, then save. The form still stores the same structured content in KV, but you no longer need to hand-edit raw JSON.
+            This workspace is intended for {adminHost}. Cloudflare Access should identify you before the app loads, then the editor reads and writes the same structured KV content as the public site.
           </p>
         </div>
-        <Link className="btn" href="/">
+        <a className="btn" href={publicSiteUrl}>
           Back to site
-        </Link>
+        </a>
       </section>
 
       {!isAuthenticated ? (
         <section className="admin-card">
-          <div className="admin-grid">
-            <div className="field">
-              <label htmlFor="admin-email">Admin email</label>
-              <input id="admin-email" className="input" value={email} onChange={(e) => setEmail(e.target.value)} />
-            </div>
-            <div className="field">
-              <label htmlFor="admin-code">Verification code</label>
-              <input id="admin-code" className="input" value={code} onChange={(e) => setCode(e.target.value)} />
-            </div>
-          </div>
+          <div className="eyebrow">Access required</div>
+          <p style={{ margin: '8px 0 0' }}>
+            Sign in through Cloudflare Access with your approved identity, then reload this page. Once Access forwards your email header to the app, the editor will unlock automatically.
+          </p>
           <div className="action-row" style={{ marginTop: 16 }}>
-            <button className="btn" onClick={requestCode}>Send code</button>
-            <button className="btn btn-primary" onClick={verifyCode}>Verify & open editor</button>
+            <a className="btn btn-primary" href={accessLogoutUrl}>Open Cloudflare Access login</a>
+            <a className="btn" href={publicSiteUrl}>Return to public site</a>
           </div>
-          <p className={status.error ? 'status-error' : 'status-ok'}>{status.text || 'Not signed in yet. If gateway rules are configured, they have already been checked.'}</p>
+          <p className={status.error ? 'status-error' : 'status-ok'}>
+            {status.text || 'Cloudflare Access did not present an approved admin identity yet.'}
+          </p>
         </section>
       ) : (
         <>
           <section className="admin-card">
             <div className="action-row" style={{ justifyContent: 'space-between', marginBottom: 16 }}>
-              <p className="status-ok" style={{ margin: 0 }}>Signed in as {adminEmail}</p>
-              <button className="btn" onClick={logout}>Sign out</button>
+              <div>
+                <p className="status-ok" style={{ margin: 0 }}>Signed in as {adminEmail}</p>
+                <p style={{ margin: '8px 0 0' }}>Access is controlled by Cloudflare Access on {adminHost}.</p>
+              </div>
+              <a className="btn" href={accessLogoutUrl}>End Access session</a>
             </div>
             <div className="action-row">
               <button className="btn" onClick={reloadContent}>Reload content</button>
               <button className="btn" onClick={reloadAuditLog}>Reload audit</button>
               <button className="btn btn-primary" onClick={saveContent}>Save</button>
             </div>
-            <p className={status.error ? 'status-error' : 'status-ok'}>{status.text || 'Authenticated.'}</p>
+            <p className={status.error ? 'status-error' : 'status-ok'}>{status.text || 'Authenticated through Cloudflare Access.'}</p>
           </section>
 
           <section className="admin-card">

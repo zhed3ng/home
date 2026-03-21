@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { saveSiteContent, getSiteContent, siteContentSchema } from '@/lib/content';
-import { getAdminTokenFromRequest, validateAdminSession } from '@/lib/admin-auth';
+import { getAdminEmailFromRequest } from '@/lib/admin-auth';
 import { getRequestCountry, getRequestIp, getRequestUserAgent, isAllowedByGateway } from '@/lib/admin-gateway';
 import { appendAuditEvent } from '@/lib/admin-security';
 
@@ -10,8 +10,7 @@ async function requireAdmin(request: NextRequest) {
     return { adminEmail: null, gatewayReason: gateway.reason };
   }
 
-  const token = getAdminTokenFromRequest(request);
-  const adminEmail = await validateAdminSession(token);
+  const adminEmail = getAdminEmailFromRequest(request);
   return { adminEmail, gatewayReason: gateway.reason };
 }
 

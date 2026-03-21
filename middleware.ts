@@ -10,8 +10,9 @@ export function middleware(request: NextRequest) {
   const host = getRequestHost(request);
   const pathname = request.nextUrl.pathname;
   const onAdminHost = isAdminHost(host);
+  const gatewayConfigured = hasGatewayRestrictionsConfigured();
 
-  if (!onAdminHost && pathname.startsWith('/admin')) {
+  if (!onAdminHost && pathname.startsWith('/admin') && gatewayConfigured) {
     const url = new URL(`https://${getAdminHost()}`);
     url.pathname = pathname === '/admin' ? '/' : pathname;
     url.search = request.nextUrl.search;
@@ -22,33 +23,26 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  if (!hasGatewayRestrictionsConfigured()) {
-    return NextResponse.json(
-      {
-        error: 'Admin host is missing gateway protection. Configure Cloudflare Access or another trusted identity proxy before exposing this hostname.',
-      },
-      { status: 503 },
-    );
+  if (gatewayConfigured) {
+    const gateway = isAllowedByGateway(request);
+    if (!gateway.allowed) {
+      return NextResponse.json(
+        {
+          error:
+            'This admin host is protected. Present an allowed Google identity, approved device token, country, or IP before continuing.',
+        },
+        { status: 403 },
+      );
+    }
   }
 
-  const gateway = isAllowedByGateway(request);
-  if (!gateway.allowed) {
-    return NextResponse.json(
-      {
-        error:
-          'This admin host is protected. Present an allowed Google identity, approved device token, country, or IP before continuing.',
-      },
-      { status: 403 },
-    );
-  }
-
-  if (pathname === '/') {
+  if (onAdminHost && pathname === '/') {
     const url = request.nextUrl.clone();
     url.pathname = '/admin';
     return NextResponse.rewrite(url);
   }
 
-  if (pathname === '/favicon.ico') {
+  if (onAdminHost && pathname === '/favicon.ico') {
     return NextResponse.redirect(getPublicSiteUrl(), 307);
   }
 

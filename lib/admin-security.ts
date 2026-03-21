@@ -63,5 +63,10 @@ export async function consumeRequestCodeQuota(email: string, ip: string) {
   const current = (await storageGet<number>(key)) || 0;
   const next = current + 1;
   await storageSet(key, next, REQUEST_CODE_WINDOW_MINUTES * 60);
-  return { allowed: next <= REQUEST_CODE_LIMIT, attempts: next, limit: REQUEST_CODE_LIMIT };
+  return {
+    allowed: next <= REQUEST_CODE_LIMIT,
+    attempts: next,
+    limit: REQUEST_CODE_LIMIT,
+    retryAfterMinutes: REQUEST_CODE_WINDOW_MINUTES,
+  };
 }

@@ -64,27 +64,24 @@ OPENAI_API_KEY=...
 ASK_JOE_MODEL=gpt-4.1-mini
 ```
 
-## Recommended admin security environment variables
+## Recommended admin environment variables
 
 ```bash
+PUBLIC_SITE_URL=https://joedeng.net
+ADMIN_HOST=admin.joedeng.net
+ADMIN_EMAIL=you@gmail.com
 ADMIN_ALLOWED_GOOGLE_EMAILS=you@gmail.com
 ADMIN_ALLOWED_IPS=203.0.113.10
 ADMIN_ALLOWED_COUNTRIES=US
 ADMIN_ALLOWED_DEVICE_TOKENS=your-fixed-device-token
 ADMIN_GATEWAY_BYPASS_SECRET=shared-secret-for-trusted-proxy
 ADMIN_ALERT_EMAIL=you@gmail.com
-ADMIN_SESSION_TTL_SECONDS=7200
-ADMIN_VERIFY_FAILURE_LIMIT=5
-ADMIN_VERIFY_LOCKOUT_MINUTES=15
-ADMIN_REQUEST_CODE_LIMIT=3
-ADMIN_REQUEST_CODE_WINDOW_MINUTES=5
-LOGIN_CODE_TTL_MINUTES=10
 ADMIN_AUDIT_LOG_LIMIT=200
 ```
 
 ## Example deployment pattern
 
-推荐把 `joedeng.net` 继续公开部署在 Vercel，而 `/admin*` 再放在如下第一层身份保护之后：
+推荐把公开站点继续部署在 `joedeng.net`，并把后台入口迁移到 `admin.joedeng.net`。后台子域名在进入应用前，应先经过如下第一层身份保护：
 
 - **Cloudflare Access**：将 Google 登录邮箱断言写入 `cf-access-authenticated-user-email`
 - **Google IAP / 其他可信代理**：将登录邮箱写入 `x-goog-authenticated-user-email` 或 `x-auth-request-email`
@@ -103,12 +100,11 @@ ADMIN_AUDIT_LOG_LIMIT=200
 
 ## Admin flow
 
-1. 访问 `/admin`。如果配置了 gateway allowlist，先通过第一层检查；如果没配置，则直接进入后台登录页。
-2. 在 `/admin` 输入授权邮箱。
-3. 系统通过 Resend 发送验证码。
-4. 验证成功后拿到仅限 `/admin` 路径的 session cookie。
-5. Admin 保存内容时调用 `PUT /admin/api/content`。
-6. 审计日志写入 KV；异常行为可触发告警邮件。
+1. 访问 `https://admin.joedeng.net/`。中间件会把根路径重写到 `/admin`，同时要求请求先通过 gateway allowlist。
+2. Cloudflare Access（或其他可信代理）为已批准身份注入邮箱 header。
+3. 应用验证该 header 是否属于授权管理员邮箱。
+4. 验证通过后直接加载后台编辑器；保存内容时调用 `PUT /admin/api/content`。
+5. 审计日志继续写入 KV。
 
 ## Notes
 

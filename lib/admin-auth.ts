@@ -1,72 +1,61 @@
-import crypto from 'node:crypto';
-import { cookies } from 'next/headers';
+import { headers } from 'next/headers';
 import { NextRequest } from 'next/server';
-import { storageDel, storageGet, storageSet } from '@/lib/storage';
+import { isAllowedByGateway } from '@/lib/admin-gateway';
 
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL?.trim().toLowerCase() || 'zhe.joe.deng@gmail.com';
-const LOGIN_CODE_TTL_MINUTES = Number(process.env.LOGIN_CODE_TTL_MINUTES || 10);
-const SESSION_TTL_SECONDS = Number(process.env.ADMIN_SESSION_TTL_SECONDS || 60 * 60 * 2);
-export const ADMIN_SESSION_COOKIE = 'admin_session';
+const ADMIN_HOST = process.env.ADMIN_HOST?.trim().toLowerCase() || 'admin.joedeng.net';
+const PUBLIC_SITE_URL = process.env.PUBLIC_SITE_URL?.trim() || 'https://joedeng.net';
 
-function codeKey(email: string) {
-  return `admin:code:${email}`;
+function listFromCsv(value?: string) {
+  return String(value || '')
+    .split(',')
+    .map((item) => item.trim().toLowerCase())
+    .filter(Boolean);
 }
 
-function sessionKey(token: string) {
-  return `admin:session:${token}`;
+function getAllowedAdminEmails() {
+  return new Set([ADMIN_EMAIL, ...listFromCsv(process.env.ADMIN_ALLOWED_GOOGLE_EMAILS)]);
 }
 
-export function isAllowedAdminEmail(email: string) {
-  return email.trim().toLowerCase() === ADMIN_EMAIL;
+function readGatewayEmail(headerStore: Pick<Headers, 'get'>) {
+  return (
+    headerStore.get('cf-access-authenticated-user-email') ||
+    headerStore.get('x-goog-authenticated-user-email') ||
+    headerStore.get('x-auth-request-email') ||
+    ''
+  )
+    .replace(/^accounts\.google\.com:/, '')
+    .trim()
+    .toLowerCase();
 }
 
-export async function issueEmailCode(email: string) {
-  const normalizedEmail = email.trim().toLowerCase();
-  const code = `${crypto.randomInt(0, 1000000)}`.padStart(6, '0');
-  await storageSet(codeKey(normalizedEmail), code, LOGIN_CODE_TTL_MINUTES * 60);
-  return { code, ttlMinutes: LOGIN_CODE_TTL_MINUTES };
+function resolveAdminEmail(candidateEmail: string) {
+  if (!candidateEmail) return null;
+  return getAllowedAdminEmails().has(candidateEmail) ? candidateEmail : null;
 }
 
-export async function verifyEmailCode(email: string, code: string) {
-  const normalizedEmail = email.trim().toLowerCase();
-  const storedCode = await storageGet<string>(codeKey(normalizedEmail));
-  if (!storedCode || storedCode !== code.trim()) {
+export function getAdminHost() {
+  return ADMIN_HOST;
+}
+
+export function getPublicSiteUrl() {
+  return PUBLIC_SITE_URL;
+}
+
+export function isAdminHost(host: string) {
+  return host.trim().toLowerCase() === ADMIN_HOST;
+}
+
+export function getAdminEmailFromRequest(request: NextRequest) {
+  const gateway = isAllowedByGateway(request);
+  if (!gateway.allowed) {
     return null;
   }
 
-  await storageDel(codeKey(normalizedEmail));
-
-  const token = crypto.randomUUID();
-  await storageSet(sessionKey(token), normalizedEmail, SESSION_TTL_SECONDS);
-  return token;
+  return resolveAdminEmail(gateway.identity.googleEmail);
 }
 
-export async function validateAdminSession(token: string) {
-  if (!token) return null;
-  const value = await storageGet<string>(sessionKey(token));
-  return value || null;
-}
-
-export function getAdminTokenFromRequest(request: NextRequest) {
-  return request.cookies.get(ADMIN_SESSION_COOKIE)?.value || request.headers.get('x-admin-token') || '';
-}
-
-export async function getAdminTokenFromCookies() {
-  const cookieStore = await cookies();
-  return cookieStore.get(ADMIN_SESSION_COOKIE)?.value || '';
-}
-
-export async function clearAdminSession(token: string) {
-  if (!token) return;
-  await storageDel(sessionKey(token));
-}
-
-export function getAdminSessionCookieOptions() {
-  return {
-    httpOnly: true,
-    sameSite: 'lax' as const,
-    secure: process.env.NODE_ENV === 'production',
-    path: '/admin',
-    maxAge: SESSION_TTL_SECONDS,
-  };
+export async function getAdminEmailFromHeaders() {
+  const headerStore = await headers();
+  return resolveAdminEmail(readGatewayEmail(headerStore));
 }
